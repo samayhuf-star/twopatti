@@ -6,7 +6,7 @@ export const SUPPORT_URL = 'https://samayhuf-star.github.io/app-legal/2patti/sup
 export const STARTING_CHIPS = 25_000;
 export const DAILY_BONUS = 250;
 /** Lobby 'Online soon' pill. Set to false to hide it. */
-export const SHOW_ONLINE_SOON = true;
+export const SHOW_ONLINE_SOON = false;
 
 export const CHIP_DISCLAIMER = 'Virtual chips only. No cash value and no cash-out. Chips cannot be withdrawn, sold or exchanged.';
 export const AGE_NOTICE = '18+ only. For entertainment. No real-money gambling.';
