@@ -131,6 +131,15 @@ describe('suit tie-breaks (S > H > D > C), always one winner', () => {
     expect(compareShowdown({ made: ma, hole: a }, { made: mb, hole: b })).toBeGreaterThan(0);
     expect(compareShowdown({ made: mb, hole: b }, { made: ma, hole: a })).toBeLessThan(0);
   });
+  test('fallback order: higher real card first, then the other real card', () => {
+    // Synthetic hands (fed straight to the comparator) with the same made hand, the same suit
+    // pattern and the same higher card, so only the second real card can decide.
+    const made = bestImaginary(parseCards('KS QH')).made; // A-K-Q straight
+    const a = parseCards('KS QH');
+    const b = parseCards('KS JH');
+    expect(compareShowdown({ made, hole: a }, { made, hole: b })).toBeGreaterThan(0);
+    expect(compareShowdown({ made, hole: b }, { made, hole: a })).toBeLessThan(0);
+  });
   test('exhaustive: any two different hole pairs in centre mode never tie', () => {
     const centre = parseCard('7D');
     const all: Card[][] = [];

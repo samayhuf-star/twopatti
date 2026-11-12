@@ -211,7 +211,12 @@ function maxSingleBet(s: GameState): number {
   return s.config.potCap;
 }
 
-/** Legal options for the player whose turn it is. Every amount is an ante multiple. */
+/**
+ * Legal options for the player whose turn it is. Every amount is an ante multiple.
+ * A raise is offered only if it stays within the pot, the blind cap (blind players) and the
+ * 128x-ante pot cap; otherwise only the lower option is offered. A call that reaches the
+ * pot cap ends betting and forces a showdown.
+ */
 export function legalActions(s: GameState, playerIndex = s.turn): LegalActions {
   const none: LegalActions = { canSee: false, mustSee: false, canFold: false, bets: [], show: null };
   if (s.phase !== 'betting' || playerIndex !== s.turn) return none;
@@ -228,13 +233,13 @@ export function legalActions(s: GameState, playerIndex = s.turn): LegalActions {
     } else {
       if (B <= p.chips) bets.push({ amount: B, raise: false });
       const r = 2 * B;
-      if (r <= blindCap && r <= s.pot && r <= maxSingleBet(s) && r <= p.chips) bets.push({ amount: r, raise: true });
+      if (r <= blindCap && r <= s.pot && r <= maxSingleBet(s) && s.pot + r <= s.config.potCap && r <= p.chips) bets.push({ amount: r, raise: true });
     }
   } else {
     const call = 2 * B;
     if (call <= p.chips && call <= maxSingleBet(s)) bets.push({ amount: call, raise: false });
     const r = 4 * B;
-    if (r <= s.pot && r <= maxSingleBet(s) && r <= p.chips) bets.push({ amount: r, raise: true });
+    if (r <= s.pot && r <= maxSingleBet(s) && s.pot + r <= s.config.potCap && r <= p.chips) bets.push({ amount: r, raise: true });
   }
   let show: { amount: number } | null = null;
   if (heads && !mustSee) {

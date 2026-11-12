@@ -59,6 +59,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setState(s => ({ ...s, balance: s.balance + d.amount, lastDaily: d.today, streak: d.streak }));
     return d.amount;
   }, [state.lastDaily, state.streak]);
+  // TODO(before release): test-only free refill, remove before the App Store release.
   const freeTopUp = useCallback(() => {
     const add = Math.max(0, FREE_TOPUP_TO - state.balance);
     if (add > 0) setState(s => ({ ...s, balance: s.balance + add }));

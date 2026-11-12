@@ -21,7 +21,8 @@ three-card hand wins the pot. Virtual chips only: no cash value, no cash-out. 18
   real cards (Spades > Hearts > Diamonds > Clubs), so there is always exactly one winner.
 - +10% Blind Win house bonus for a still-blind winner (never taken from the pot).
 - Local wallet only (AsyncStorage): 25,000 starting chips, daily bonus (2,000 up to 5,000 on a
-  7-day streak), free top-up to 5,000 when below the Silver minimum.
+  7-day streak). Test-only "Free refill (test)" back to 5,000 when below the Silver minimum
+  (TODO: remove before release).
 - 18+ age gate on first launch. Rules screen. Settings with a vibration toggle and legal links.
 - Motion: deal animation, card flip on see, centre reveal, pot pulse, winner banner with crown
   and confetti, +10% Blind Win toast, haptics. System Reduce Motion skips movement and confetti.

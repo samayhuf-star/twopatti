@@ -251,6 +251,26 @@ describe('centre mode rounds', () => {
 });
 
 describe('pot cap', () => {
+  test('a raise that would take the pot past 12,800 is not offered; the lower option is', () => {
+    let s = start('imaginary', 4, 11);
+    s = act(s, { type: 'see' });
+    s.currentBlind = 400; // seen: call 800, raise 1,600
+    s.pot = 11_600;
+    expect(legalActions(s).bets).toEqual([{ amount: 800, raise: false }]);
+    s.pot = 11_200; // 11,200 + 1,600 = 12,800 fits exactly
+    expect(legalActions(s).bets.map(b => b.amount)).toEqual([800, 1600]);
+  });
+  test('a call that reaches the cap stops betting and goes to a forced showdown', () => {
+    let s = start('imaginary', 4, 12);
+    s.pot = 12_000;
+    s.currentBlind = 400;
+    s = act(s, { type: 'bet', raise: false }); // blind 400 -> 12,400, still under
+    expect(s.phase).toBe('betting');
+    s = act(s, { type: 'bet', raise: false }); // -> 12,800
+    expect(s.phase).toBe('complete');
+    expect(s.result?.reason).toBe('potCap');
+    expect(legalActions(s).bets).toEqual([]);
+  });
   test('reaching 128x ante forces a showdown of every remaining hand', () => {
     let s = start('imaginary', 4, 10);
     s.pot = 12_700;
