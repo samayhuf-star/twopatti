@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -9,7 +10,8 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { Card, SUIT_SYMBOL, rankLabel } from '../engine';
+import { Card, SUIT_SYMBOL, cardLabel, rankLabel } from '../engine';
+import { CARD_BACK, CARD_RATIO, cardFace } from '../lib/art';
 import { colors, fonts } from '../theme';
 
 type Props = {
@@ -30,7 +32,7 @@ type Props = {
 
 export function PlayingCard({ card, faceUp, width = 44, dealFrom, dealDelay = 0, imaginary, dim, rotate = 0, slowFlip, onDealt }: Props) {
   const reduce = useReducedMotion();
-  const height = Math.round(width * 1.4);
+  const height = Math.round(width * CARD_RATIO);
   const tx = useSharedValue(reduce || !dealFrom ? 0 : dealFrom.x);
   const ty = useSharedValue(reduce || !dealFrom ? 0 : dealFrom.y);
   const op = useSharedValue(reduce || !dealFrom ? 1 : 0);
@@ -73,19 +75,15 @@ export function PlayingCard({ card, faceUp, width = 44, dealFrom, dealDelay = 0,
   const red = card && (card.suit === 'H' || card.suit === 'D');
   const showFace = faceUp && card;
   return (
-    <Animated.View style={[{ width, height }, anim, dim && { opacity: 0.45 }]}>
-      {showFace ? (
-        <View style={[styles.face, imaginary && styles.imaginary, { borderRadius: width * 0.12 }]}>
+    <Animated.View style={[{ width, height }, anim, dim && { opacity: 0.45 }]} accessible accessibilityLabel={showFace ? cardLabel(card) : 'Face-down card'}>
+      {showFace && imaginary ? (
+        <View style={[styles.face, styles.imaginary, { borderRadius: width * 0.08 }]}>
           <Text style={[styles.rank, { fontSize: width * 0.38, color: red ? colors.red : colors.black }]}>{rankLabel(card.rank)}</Text>
-          <Text style={[styles.suit, { fontSize: width * 0.42, color: red ? colors.red : colors.black }, imaginary && styles.imgSuit]}>
-            {SUIT_SYMBOL[card.suit]}
-          </Text>
+          <Text style={[styles.suit, { fontSize: width * 0.42, color: red ? colors.red : colors.black }, styles.imgSuit]}>{SUIT_SYMBOL[card.suit]}</Text>
         </View>
       ) : (
-        <View style={[styles.back, { borderRadius: width * 0.12 }]}>
-          <View style={[styles.backInner, { borderRadius: width * 0.08 }]}>
-            <View style={[styles.medallion, { width: width * 0.36, height: width * 0.36, borderRadius: width * 0.18 }]} />
-          </View>
+        <View style={styles.shadow}>
+          <Image source={showFace ? cardFace(card) : CARD_BACK} style={{ width, height }} contentFit="fill" transition={0} />
         </View>
       )}
     </Animated.View>
@@ -93,33 +91,17 @@ export function PlayingCard({ card, faceUp, width = 44, dealFrom, dealDelay = 0,
 }
 
 const styles = StyleSheet.create({
-  face: {
+  shadow: {
     flex: 1,
-    backgroundColor: colors.ivory,
-    borderWidth: 1.5,
-    borderColor: colors.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
     shadowColor: '#000',
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.4,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
+  face: { flex: 1, backgroundColor: colors.ivory, alignItems: 'center', justifyContent: 'center' },
   imaginary: { borderStyle: 'dashed', borderColor: colors.goldSoft, borderWidth: 2, backgroundColor: '#EFE6CC' },
   rank: { fontFamily: fonts.bold, lineHeight: undefined },
   suit: { marginTop: -4 },
   imgSuit: { opacity: 0.45 },
-  back: {
-    flex: 1,
-    backgroundColor: colors.navy,
-    borderWidth: 1.5,
-    borderColor: colors.gold,
-    padding: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  backInner: { flex: 1, borderWidth: 1, borderColor: 'rgba(196,163,90,0.55)', alignItems: 'center', justifyContent: 'center' },
-  medallion: { borderWidth: 1.5, borderColor: colors.gold, backgroundColor: 'rgba(196,163,90,0.18)' },
 });

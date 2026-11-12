@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LayoutChangeEvent, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { LayoutChangeEvent, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../components/Button';
@@ -30,6 +29,7 @@ import {
   startHand,
   tableConfig,
 } from '../engine';
+import { BOT_PROFILES, CARD_RATIO, ROOM_BG, ROOM_BG_ASPECT, TABLE_IMG, TABLE_TOP_FRAC } from '../lib/art';
 import { CHIP_DISCLAIMER } from '../lib/config';
 import { feel } from '../lib/feel';
 import { useStore } from '../lib/store';
@@ -40,27 +40,38 @@ const HUMAN = 'you';
 const DEAL_STEP = 90;
 const BOT_LEVELS: BotLevel[] = ['medium', 'easy', 'medium', 'easy'];
 
-/** Seat anchors as fractions of the felt, clockwise from the local player at the bottom. */
+/** Seat anchors as fractions of the felt, clockwise from the local player at the bottom (v4 layout). */
 const LAYOUT: Record<4 | 5, { x: number; y: number }[]> = {
   5: [
-    { x: 0.5, y: 0.83 },
-    { x: 0.14, y: 0.56 },
-    { x: 0.2, y: 0.17 },
-    { x: 0.8, y: 0.17 },
-    { x: 0.86, y: 0.56 },
+    { x: 0.42, y: 0.75 },
+    { x: 0.13, y: 0.53 },
+    { x: 0.15, y: 0.15 },
+    { x: 0.85, y: 0.15 },
+    { x: 0.87, y: 0.53 },
   ],
+  // Four seats: the right-hand chair stays empty, so the centre stays clear under the dealer.
   4: [
-    { x: 0.5, y: 0.83 },
-    { x: 0.14, y: 0.56 },
-    { x: 0.5, y: 0.11 },
-    { x: 0.86, y: 0.56 },
+    { x: 0.42, y: 0.75 },
+    { x: 0.13, y: 0.53 },
+    { x: 0.15, y: 0.15 },
+    { x: 0.85, y: 0.15 },
   ],
 };
 
-function makeSeats(humanChips: number, bots: number[]): SeatInput[] {
+/** Picks distinct names for the computer players at this table. */
+function pickBotNames(count: number): string[] {
+  const pool = BOT_PROFILES.map(p => p.name);
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, count);
+}
+
+function makeSeats(humanChips: number, bots: number[], names: string[]): SeatInput[] {
   return [
     { id: HUMAN, name: 'You', isBot: false, chips: humanChips },
-    ...bots.map((c, i) => ({ id: `b${i + 1}`, name: `Bot ${i + 1}`, isBot: true, chips: c })),
+    ...bots.map((c, i) => ({ id: `b${i + 1}`, name: names[i] ?? `Player ${i + 1}`, isBot: true, chips: c })),
   ];
 }
 
@@ -75,14 +86,16 @@ export default function Table() {
   const store = useStore();
   const config = useMemo(() => tableConfig(mode, SILVER), [mode]);
 
-  const [felt, setFelt] = useState({ w: 0, h: 0 });
+  const win = useWindowDimensions();
+  const [wrap, setWrap] = useState({ y: 0, h: 0 });
+  const [botNames] = useState(() => pickBotNames(seatCount - 1));
   const [handNo, setHandNo] = useState(0);
   const [dealer, setDealer] = useState(seatCount - 1);
   const [dealing, setDealing] = useState(true);
   const [showResult, setShowResult] = useState(false);
   const [bannerOn, setBannerOn] = useState(false);
   const [game, setGame] = useState<GameState>(() =>
-    startHand(config, makeSeats(store.balance, Array.from({ length: seatCount - 1 }, randomBotChips)), seatCount - 1, Math.random),
+    startHand(config, makeSeats(store.balance, Array.from({ length: seatCount - 1 }, randomBotChips), botNames), seatCount - 1, Math.random),
   );
 
   const human = game.players[0];
@@ -190,7 +203,7 @@ export default function Table() {
     setShowResult(false);
     setBannerOn(false);
     setDealing(true);
-    setGame(startHand(config, makeSeats(humanChips, bots), d, Math.random));
+    setGame(startHand(config, makeSeats(humanChips, bots, botNames), d, Math.random));
     setHandNo(n => n + 1);
   };
 
@@ -199,10 +212,17 @@ export default function Table() {
     router.back();
   };
 
-  const onFeltLayout = (e: LayoutChangeEvent) => setFelt({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height });
+  const onWrapLayout = (e: LayoutChangeEvent) => setWrap({ y: e.nativeEvent.layout.y, h: e.nativeEvent.layout.height });
+
+  // The room photo fills the screen height (cover); the table's far rail sits where the dealer's hands are.
+  const bgW = Math.max(win.width, win.height * ROOM_BG_ASPECT);
+  const bgH = bgW / ROOM_BG_ASPECT;
+  const tableTop = Math.max(0, bgH * TABLE_TOP_FRAC - wrap.y);
+  const FELT_INSET = 14;
+  const felt = { w: win.width, h: Math.max(0, wrap.h - tableTop - FELT_INSET - 4) };
 
   const anchors = LAYOUT[seatCount];
-  const dealerPt = { x: felt.w * 0.5, y: felt.h * 0.02 };
+  const dealerPt = { x: felt.w * 0.5, y: -24 };
   const n = seatCount;
   const dealIndex = (seat: number, round: number) => round * n + ((seat - dealer - 1 + n) % n);
 
@@ -223,7 +243,7 @@ export default function Table() {
 
   return (
     <View style={styles.root}>
-      <Image source={require('../../assets/casino-bg.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <Image source={ROOM_BG} style={{ position: 'absolute', top: 0, left: (win.width - bgW) / 2, width: bgW, height: bgH }} contentFit="cover" />
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right', 'bottom']}>
         <View style={styles.top}>
           <PressableScale onPress={leave} accessibilityLabel="Leave table">
@@ -243,17 +263,20 @@ export default function Table() {
           </PressableScale>
         </View>
 
-        <View style={styles.feltWrap}>
-          <View style={styles.rail}>
-            <LinearGradient colors={[colors.feltEdge, colors.feltHi, colors.felt, colors.feltEdge]} locations={[0, 0.35, 0.7, 1]} style={styles.felt} onLayout={onFeltLayout}>
-              {felt.w > 0 && (
+        <View style={styles.feltWrap} onLayout={onWrapLayout}>
+          {wrap.h > 0 && (
+            <Image
+              source={TABLE_IMG}
+              style={{ position: 'absolute', left: -win.width * 0.17, width: win.width * 1.34, top: tableTop, height: wrap.h - tableTop + 26 }}
+              contentFit="fill"
+              transition={0}
+            />
+          )}
+          <View style={{ position: 'absolute', left: 0, width: felt.w, top: tableTop + FELT_INSET, height: felt.h }}>
+              {felt.w > 0 && felt.h > 0 && (
                 <>
-                  <View style={[styles.dealerTag, { left: dealerPt.x - 40, top: dealerPt.y }]}>
-                    <Text style={styles.dealerText}>DEALER</Text>
-                  </View>
-
                   {/* Centre card or the imaginary cue */}
-                  <View style={[styles.centre, { left: felt.w / 2 - 60, top: felt.h * 0.25 }]}>
+                  <View style={[styles.centre, { left: felt.w / 2 - 60, top: felt.h * 0.02 }]}>
                     {mode === 'centre' && game.centre ? (
                       <PlayingCard
                         key={`c${handNo}`}
@@ -261,7 +284,7 @@ export default function Table() {
                         faceUp={game.centreOpen}
                         width={50}
                         slowFlip
-                        dealFrom={{ x: 0, y: dealerPt.y - felt.h * 0.25 }}
+                        dealFrom={{ x: 0, y: dealerPt.y - felt.h * 0.02 }}
                         dealDelay={n * 2 * DEAL_STEP}
                       />
                     ) : (
@@ -271,9 +294,9 @@ export default function Table() {
                       </View>
                     )}
                   </View>
-                  <View style={[styles.potWrap, { left: felt.w / 2 - 100, top: felt.h * 0.39 }]}>
+                  <View style={[styles.potWrap, { left: felt.w / 2 - 100, top: felt.h * 0.17 }]}>
                     {!result && <ChipPile amount={game.pot} ante={config.ante} />}
-                    <Text style={styles.ante}>ANTE {config.ante}  ·  BLIND {formatChips(game.currentBlind)}</Text>
+                    {!result && <Text style={styles.ante}>ANTE {config.ante}  ·  BLIND {formatChips(game.currentBlind)}</Text>}
                   </View>
 
                   {game.players.map((p, i) => {
@@ -281,18 +304,20 @@ export default function Table() {
                     const cx = a.x * felt.w;
                     const cy = a.y * felt.h;
                     const isMe = i === 0;
-                    const cw = isMe ? 52 : 30;
-                    const ch = Math.round(cw * 1.4);
+                    const cw = isMe ? 46 : 30;
+                    const ch = Math.round(cw * CARD_RATIO);
                     const reveal = isMe ? p.seen || shownIds.has(p.id) : shownIds.has(p.id);
                     const shown = result?.shown.find(h => h.playerId === p.id);
                     const won = result?.winnerId === p.id;
                     const badge = p.folded ? 'Folded' : p.seen ? 'Seen' : 'Blind';
                     const extra = (shown?.imaginary || (isMe && !shown && myHand?.third)) ? 1 : 0;
-                    const rowW = (2 + extra) * (cw + 3);
-                    // Human: cards centred above the seat. Bots: cards beside the avatar, towards the middle of the table.
+                    // With a third (imaginary) card the row fans, so it stays clear of the next seat.
+                    const gap = extra ? (isMe ? -14 : -8) : 3;
+                    const rowW = (2 + extra) * cw + (1 + extra) * gap;
+                    // Cards sit beside the portrait, towards the middle of the table (the local player's to the right, as in v4).
                     const leftSide = a.x <= 0.5;
-                    const cardsLeft = isMe ? cx - rowW / 2 : leftSide ? cx + 34 : cx - 34 - rowW;
-                    const cardsTop = isMe ? cy - 50 - ch - 2 : cy - 12;
+                    const cardsLeft = isMe ? cx + 38 : leftSide ? cx + 34 : cx - 34 - rowW;
+                    const cardsTop = isMe ? cy - 20 : cy - 12;
                     return (
                       <View key={p.id} pointerEvents="none" style={StyleSheet.absoluteFill}>
                         <View style={{ position: 'absolute', left: cx - 46, top: cy - 50 }}>
@@ -308,25 +333,34 @@ export default function Table() {
                             size={isMe ? 52 : 46}
                           />
                         </View>
-                        <View style={{ position: 'absolute', left: cardsLeft, top: cardsTop, flexDirection: 'row', gap: 3 }}>
+                        <View style={{ position: 'absolute', left: cardsLeft, top: cardsTop, flexDirection: 'row' }}>
                           {p.hole.map((c, k) => (
+                            <View key={`${handNo}-${p.id}-${k}`} style={{ marginLeft: k ? gap : 0 }}>
                             <PlayingCard
-                              key={`${handNo}-${p.id}-${k}`}
                               card={c}
                               faceUp={reveal}
                               width={cw}
                               dim={p.folded}
-                              rotate={isMe ? (k === 0 ? -4 : 4) : 0}
+                              rotate={isMe ? (k === 0 ? -3 : 3) : 0}
                               dealFrom={{ x: dealerPt.x - cardsLeft, y: dealerPt.y - cardsTop }}
                               dealDelay={dealIndex(i, k) * DEAL_STEP}
                               onDealt={isMe ? () => feel.light() : undefined}
                             />
+                            </View>
                           ))}
-                          {shown?.imaginary && <PlayingCard card={shown.third} faceUp imaginary width={cw} />}
-                          {isMe && !shown && myHand?.third && <PlayingCard card={myHand.third} faceUp imaginary width={cw} />}
+                          {shown?.imaginary && (
+                            <View style={{ marginLeft: gap }}>
+                              <PlayingCard card={shown.third} faceUp imaginary width={cw} />
+                            </View>
+                          )}
+                          {isMe && !shown && myHand?.third && (
+                            <View style={{ marginLeft: gap }}>
+                              <PlayingCard card={myHand.third} faceUp imaginary width={cw} />
+                            </View>
+                          )}
                         </View>
                         {shown && (
-                          <View style={[styles.madeTag, { left: cardsLeft + rowW / 2 - 60, top: isMe ? cardsTop - 20 : cardsTop + ch + 3 }, won && styles.madeWin]}>
+                          <View style={[styles.madeTag, { left: cardsLeft + rowW / 2 - 60, top: isMe || a.y > 0.4 ? cardsTop - 22 : cardsTop + ch + 3 }, won && styles.madeWin]}>
                             <Text style={styles.madeText} numberOfLines={1}>
                               {describeMade(shown.made)}
                             </Text>
@@ -337,7 +371,6 @@ export default function Table() {
                   })}
                 </>
               )}
-            </LinearGradient>
           </View>
         </View>
 
@@ -349,22 +382,23 @@ export default function Table() {
           ) : humanTurn ? (
             <Animated.View entering={FadeInDown.duration(160)} style={{ gap: 8 }}>
               {legal.mustSee && <Text style={styles.status}>Blind limit reached. See your cards to keep playing.</Text>}
+              {/* One row, as in v4. Amounts stay on the buttons. */}
               <View style={styles.btnRow}>
+                {legal.canSee && <Button compact style={{ flex: 1 }} label="SEE" sub="Free" tone="tan" onPress={() => apply({ type: 'see' })} testID="see" />}
                 {legal.bets.map(b => (
                   <Button
+                    compact
                     key={b.raise ? 'r' : 'c'}
                     style={{ flex: 1 }}
                     label={b.raise ? 'RAISE' : 'BET'}
                     sub={formatChips(b.amount)}
+                    tone="tan"
                     onPress={() => apply({ type: 'bet', raise: b.raise })}
                     testID={b.raise ? 'raise' : 'bet'}
                   />
                 ))}
-              </View>
-              <View style={styles.btnRow}>
-                {legal.canSee && <Button style={{ flex: 1 }} label="SEE" sub="Free" tone="dark" onPress={() => apply({ type: 'see' })} testID="see" />}
-                {legal.show && <Button style={{ flex: 1 }} label="SHOW" sub={formatChips(legal.show.amount)} onPress={() => apply({ type: 'show' })} testID="show" />}
-                <Button style={{ flex: 1 }} label="FOLD" tone="wine" onPress={() => apply({ type: 'fold' })} testID="fold" />
+                <Button compact style={{ flex: 1 }} label="FOLD" tone="wine" onPress={() => apply({ type: 'fold' })} testID="fold" />
+                {legal.show && <Button compact style={{ flex: 1 }} label="SHOW" sub={formatChips(legal.show.amount)} tone="tan" onPress={() => apply({ type: 'show' })} testID="show" />}
               </View>
             </Animated.View>
           ) : human.folded ? (
@@ -432,11 +466,7 @@ const styles = StyleSheet.create({
   balance: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.panel, borderRadius: 19, paddingHorizontal: 12, height: 38, borderWidth: 1, borderColor: colors.panelBorder },
   chipIcon: { width: 16, height: 16, borderRadius: 8, backgroundColor: colors.felt, borderWidth: 3, borderColor: colors.goldSoft },
   balanceText: { fontFamily: fonts.bold, fontSize: 16, color: colors.ink, fontVariant: ['tabular-nums'] },
-  feltWrap: { flex: 1, paddingHorizontal: 8, paddingTop: 36, paddingBottom: 6 },
-  rail: { flex: 1, borderRadius: 160, backgroundColor: colors.rail, padding: 10, shadowColor: '#000', shadowOpacity: 0.6, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } },
-  felt: { flex: 1, borderRadius: 150, overflow: 'visible' },
-  dealerTag: { position: 'absolute', width: 80, alignItems: 'center', paddingVertical: 3, borderRadius: 8, backgroundColor: 'rgba(20,22,26,0.7)', borderWidth: 1, borderColor: colors.gold },
-  dealerText: { fontFamily: fonts.bold, fontSize: 11, color: colors.goldSoft, letterSpacing: 1.5 },
+  feltWrap: { flex: 1 },
   centre: { position: 'absolute', width: 120, alignItems: 'center' },
   imagCue: { alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.goldSoft, backgroundColor: 'rgba(20,22,26,0.35)' },
   imagCueTitle: { fontFamily: fonts.bold, fontSize: 12, color: colors.goldSoft, letterSpacing: 1.5 },
@@ -446,8 +476,8 @@ const styles = StyleSheet.create({
   madeTag: { position: 'absolute', width: 120, alignItems: 'center', backgroundColor: 'rgba(20,22,26,0.85)', borderRadius: 8, paddingVertical: 2, paddingHorizontal: 4 },
   madeWin: { borderWidth: 1, borderColor: colors.highlight },
   madeText: { fontFamily: fonts.semibold, fontSize: 10, color: colors.ink },
-  bar: { paddingHorizontal: 12, paddingBottom: 6, paddingTop: 4, gap: 8, minHeight: 150, justifyContent: 'flex-end' },
-  btnRow: { flexDirection: 'row', gap: 8 },
+  bar: { paddingHorizontal: 10, paddingBottom: 4, paddingTop: 2, gap: 6, minHeight: 104, justifyContent: 'flex-end' },
+  btnRow: { flexDirection: 'row', gap: 6 },
   status: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink, textAlign: 'center' },
   myHand: { fontFamily: fonts.bold, fontSize: 15, color: colors.highlight, textAlign: 'center' },
   footnote: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted, textAlign: 'center' },

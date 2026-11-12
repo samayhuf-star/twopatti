@@ -11,6 +11,7 @@ import { AGE_NOTICE, CHIP_DISCLAIMER } from '../lib/config';
 import { nextDaily } from '../lib/daily';
 import { feel } from '../lib/feel';
 import { useStore } from '../lib/store';
+import { BOT_PROFILES, ROOM_BG } from '../lib/art';
 import { colors, fonts, formatChips } from '../theme';
 
 function Segment<T extends string | number>({ options, value, onChange }: { options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
@@ -45,7 +46,8 @@ export default function Lobby() {
 
   return (
     <View style={styles.root}>
-      <Image source={require('../../assets/casino-bg.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <Image source={ROOM_BG} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" blurRadius={14} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(14,16,20,0.55)' }]} />
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
         <View style={styles.top}>
           <View style={styles.balance} accessibilityLabel={`Balance ${formatChips(store.balance)} chips`}>
@@ -122,7 +124,7 @@ export default function Lobby() {
           />
 
           <View style={styles.grid}>
-            {TIERS.map(t => {
+            {TIERS.map((t, ti) => {
               const open = t.id === SILVER.id;
               return (
                 <View key={t.id} style={[styles.tier, !open && { opacity: 0.55 }]}>
@@ -130,6 +132,9 @@ export default function Lobby() {
                   <Text style={styles.tierAnte}>ANTE {t.ante >= 1000 ? `${t.ante / 1000}K` : t.ante}</Text>
                   <Text style={styles.tierMin}>Min {formatChips(t.minToSit)}</Text>
                   <Text style={styles.tierMin}>Blind cap {formatChips(t.blindCap)}</Text>
+                  <View style={styles.tierBand}>
+                    <Image source={BOT_PROFILES[ti % BOT_PROFILES.length].portrait} style={styles.tierFace} contentFit="cover" transition={0} />
+                  </View>
                   {open ? (
                     <Button
                       label="SIT"
@@ -207,6 +212,8 @@ const styles = StyleSheet.create({
   tierName: { fontFamily: fonts.bold, fontSize: 18, color: colors.ink, letterSpacing: 1 },
   tierAnte: { fontFamily: fonts.bold, fontSize: 14, color: colors.green },
   tierMin: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted },
+  tierBand: { alignSelf: 'stretch', height: 30, marginTop: 8, marginHorizontal: -12, backgroundColor: 'rgba(31,107,58,0.55)', justifyContent: 'center', paddingLeft: 10 },
+  tierFace: { width: 40, height: 40, borderRadius: 8, borderWidth: 1.5, borderColor: '#D9D4C7' },
   soon: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10, paddingVertical: 12 },
   soonText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted },
   broke: { backgroundColor: 'rgba(107,30,42,0.35)', borderRadius: 12, padding: 12, gap: 8, borderWidth: 1, borderColor: colors.wine },
