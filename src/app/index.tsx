@@ -6,13 +6,16 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../components/Button';
 import { PressableScale } from '../components/PressableScale';
-import { Mode, SILVER, TIERS } from '../engine';
-import { AGE_NOTICE, CHIP_DISCLAIMER } from '../lib/config';
+import { Mode, SILVER } from '../engine';
+import { AGE_NOTICE, CHIP_DISCLAIMER, SHOW_ONLINE_SOON } from '../lib/config';
 import { nextDaily } from '../lib/daily';
 import { feel } from '../lib/feel';
 import { useStore } from '../lib/store';
 import { BOT_PROFILES, ROOM_BG } from '../lib/art';
 import { colors, fonts, formatChips } from '../theme';
+
+/** Only tables that can be played today are listed. */
+const PLAYABLE_TIERS = [SILVER];
 
 function Segment<T extends string | number>({ options, value, onChange }: { options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
   return (
@@ -108,10 +111,12 @@ export default function Lobby() {
               <Ionicons name="desktop-outline" size={16} color={colors.ink} />
               <Text style={styles.pillText}>Computer</Text>
             </View>
-            <View style={styles.pill}>
-              <Ionicons name="globe-outline" size={16} color={colors.muted} />
-              <Text style={[styles.pillText, { color: colors.muted }]}>Online soon</Text>
-            </View>
+            {SHOW_ONLINE_SOON && (
+              <View style={styles.pill}>
+                <Ionicons name="globe-outline" size={16} color={colors.muted} />
+                <Text style={[styles.pillText, { color: colors.muted }]}>Online soon</Text>
+              </View>
+            )}
           </View>
 
           <Segment
@@ -124,52 +129,31 @@ export default function Lobby() {
           />
 
           <View style={styles.grid}>
-            {TIERS.map((t, ti) => {
-              const open = t.id === SILVER.id;
-              return (
-                <View key={t.id} style={[styles.tier, !open && { opacity: 0.55 }]}>
-                  <Text style={styles.tierName}>{t.name.toUpperCase()}</Text>
-                  <Text style={styles.tierAnte}>ANTE {t.ante >= 1000 ? `${t.ante / 1000}K` : t.ante}</Text>
-                  <Text style={styles.tierMin}>Min {formatChips(t.minToSit)}</Text>
-                  <Text style={styles.tierMin}>Blind cap {formatChips(t.blindCap)}</Text>
-                  <View style={styles.tierBand}>
-                    <Image source={BOT_PROFILES[ti % BOT_PROFILES.length].portrait} style={styles.tierFace} contentFit="cover" transition={0} />
-                  </View>
-                  {open ? (
-                    <Button
-                      label="SIT"
-                      tone="green"
-                      disabled={!canSit}
-                      style={{ marginTop: 8, alignSelf: 'stretch' }}
-                      testID="sit-silver"
-                      onPress={() => router.push({ pathname: '/table', params: { mode, seats: String(seats) } })}
-                    />
-                  ) : (
-                    <View style={styles.soon}>
-                      <Ionicons name="lock-closed" size={13} color={colors.muted} />
-                      <Text style={styles.soonText}>Coming soon</Text>
-                    </View>
-                  )}
+            {PLAYABLE_TIERS.map((t, ti) => (
+              <View key={t.id} style={styles.tier}>
+                <Text style={styles.tierName}>{t.name.toUpperCase()}</Text>
+                <Text style={styles.tierAnte}>ANTE {t.ante >= 1000 ? `${t.ante / 1000}K` : t.ante}</Text>
+                <Text style={styles.tierMin}>Min {formatChips(t.minToSit)}</Text>
+                <Text style={styles.tierMin}>Blind cap {formatChips(t.blindCap)}</Text>
+                <View style={styles.tierBand}>
+                  <Image source={BOT_PROFILES[ti % BOT_PROFILES.length].portrait} style={styles.tierFace} contentFit="cover" transition={0} />
                 </View>
-              );
-            })}
+                <Button
+                  label="SIT"
+                  tone="green"
+                  disabled={!canSit}
+                  style={{ marginTop: 8, alignSelf: 'stretch' }}
+                  testID="sit-silver"
+                  onPress={() => router.push({ pathname: '/table', params: { mode, seats: String(seats) } })}
+                />
+              </View>
+            ))}
           </View>
 
           {!canSit && (
             <View style={styles.broke}>
               <Text style={styles.brokeText}>Need {formatChips(SILVER.minToSit - store.balance)} more chips to sit at Silver.</Text>
-              {/* TODO(before release): remove the test-only free refill. Release builds use the daily bonus only. */}
-              <Button
-                label="Free refill (test)"
-                sub="Back to 5,000 chips"
-                onPress={() => {
-                  const add = store.freeTopUp();
-                  if (add) {
-                    feel.success();
-                    flash(`Free refill (test) +${formatChips(add)} chips`);
-                  }
-                }}
-              />
+              <Text style={styles.brokeText}>Claim the daily bonus to top up.</Text>
             </View>
           )}
 
@@ -214,8 +198,6 @@ const styles = StyleSheet.create({
   tierMin: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted },
   tierBand: { alignSelf: 'stretch', height: 30, marginTop: 8, marginHorizontal: -12, backgroundColor: 'rgba(31,107,58,0.55)', justifyContent: 'center', paddingLeft: 10 },
   tierFace: { width: 40, height: 40, borderRadius: 8, borderWidth: 1.5, borderColor: '#D9D4C7' },
-  soon: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10, paddingVertical: 12 },
-  soonText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted },
   broke: { backgroundColor: 'rgba(107,30,42,0.35)', borderRadius: 12, padding: 12, gap: 8, borderWidth: 1, borderColor: colors.wine },
   brokeText: { fontFamily: fonts.medium, fontSize: 14, color: colors.ink, textAlign: 'center' },
   legal: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted, textAlign: 'center', lineHeight: 17, marginTop: 6 },
