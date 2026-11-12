@@ -35,7 +35,7 @@ export default function Lobby() {
   const [mode, setMode] = useState<Mode>('imaginary');
   const [seats, setSeats] = useState<4 | 5>(5);
   const [toast, setToast] = useState<string | null>(null);
-  const daily = nextDaily(store.lastDaily, store.streak);
+  const daily = nextDaily(store.lastDaily);
   const canSit = store.balance >= SILVER.minToSit;
 
   const flash = (t: string) => {

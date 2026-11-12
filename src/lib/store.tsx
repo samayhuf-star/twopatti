@@ -11,12 +11,11 @@ interface Saved {
   balance: number;
   ageConfirmed: boolean;
   lastDaily: string | null;
-  streak: number;
   haptics: boolean;
   handsPlayed: number;
 }
 
-const initial: Saved = { balance: STARTING_CHIPS, ageConfirmed: false, lastDaily: null, streak: 0, haptics: true, handsPlayed: 0 };
+const initial: Saved = { balance: STARTING_CHIPS, ageConfirmed: false, lastDaily: null, haptics: true, handsPlayed: 0 };
 
 interface Store extends Saved {
   ready: boolean;
@@ -38,7 +37,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     AsyncStorage.getItem(KEY)
       .then(raw => {
         if (raw) {
-          const s = { ...initial, ...JSON.parse(raw) } as Saved;
+          const parsed = JSON.parse(raw) as Partial<Saved> & { streak?: number };
+          const { streak: _ignored, ...rest } = parsed;
+          const s = { ...initial, ...rest } as Saved;
           setHapticsEnabled(s.haptics);
           setState(s);
         }
@@ -54,11 +55,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const confirmAge = useCallback(() => setState(s => ({ ...s, ageConfirmed: true })), []);
   const setBalance = useCallback((n: number) => setState(s => (s.balance === n ? s : { ...s, balance: Math.max(0, Math.floor(n)) })), []);
   const claimDaily = useCallback(() => {
-    const d = nextDaily(state.lastDaily, state.streak);
+    const d = nextDaily(state.lastDaily);
     if (!d.available) return 0;
-    setState(s => ({ ...s, balance: s.balance + d.amount, lastDaily: d.today, streak: d.streak }));
+    setState(s => ({ ...s, balance: s.balance + d.amount, lastDaily: d.today }));
     return d.amount;
-  }, [state.lastDaily, state.streak]);
+  }, [state.lastDaily]);
   // TODO(before release): test-only free refill, remove before the App Store release.
   const freeTopUp = useCallback(() => {
     const add = Math.max(0, FREE_TOPUP_TO - state.balance);
