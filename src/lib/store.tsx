@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { FREE_TOPUP_TO, STARTING_CHIPS } from './config';
+import { STARTING_CHIPS } from './config';
 import { nextDaily } from './daily';
 import { setHapticsEnabled } from './feel';
 
@@ -22,7 +22,6 @@ interface Store extends Saved {
   confirmAge: () => void;
   setBalance: (n: number) => void;
   claimDaily: () => number;
-  freeTopUp: () => number;
   setHaptics: (on: boolean) => void;
   countHand: () => void;
 }
@@ -60,12 +59,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setState(s => ({ ...s, balance: s.balance + d.amount, lastDaily: d.today }));
     return d.amount;
   }, [state.lastDaily]);
-  // TODO(before release): test-only free refill, remove before the App Store release.
-  const freeTopUp = useCallback(() => {
-    const add = Math.max(0, FREE_TOPUP_TO - state.balance);
-    if (add > 0) setState(s => ({ ...s, balance: s.balance + add }));
-    return add;
-  }, [state.balance]);
   const setHaptics = useCallback((on: boolean) => {
     setHapticsEnabled(on);
     setState(s => ({ ...s, haptics: on }));
@@ -73,8 +66,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const countHand = useCallback(() => setState(s => ({ ...s, handsPlayed: s.handsPlayed + 1 })), []);
 
   const value = useMemo<Store>(
-    () => ({ ...state, ready, confirmAge, setBalance, claimDaily, freeTopUp, setHaptics, countHand }),
-    [state, ready, confirmAge, setBalance, claimDaily, freeTopUp, setHaptics, countHand],
+    () => ({ ...state, ready, confirmAge, setBalance, claimDaily, setHaptics, countHand }),
+    [state, ready, confirmAge, setBalance, claimDaily, setHaptics, countHand],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
