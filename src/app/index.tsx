@@ -152,19 +152,7 @@ export default function Lobby() {
 
           {!canSit && (
             <View style={styles.broke}>
-              <Text style={styles.brokeText}>Need {formatChips(SILVER.minToSit - store.balance)} more chips to sit at Silver.</Text>
-              {/* TODO(before release): remove the test-only free refill. Release builds use the daily bonus only. */}
-              <Button
-                label="Free refill (test)"
-                sub="Back to 5,000 chips"
-                onPress={() => {
-                  const add = store.freeTopUp();
-                  if (add) {
-                    feel.success();
-                    flash(`Free refill (test) +${formatChips(add)} chips`);
-                  }
-                }}
-              />
+              <Text style={styles.brokeText}>Need {formatChips(SILVER.minToSit - store.balance)} more chips to sit at Silver. Claim your daily bonus or wait for tomorrow.</Text>
             </View>
           )}
 
