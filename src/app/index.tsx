@@ -68,6 +68,7 @@ export default function Lobby() {
 
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.word}>2 PATTI</Text>
+          <Text style={styles.sub}>Premium Card Table</Text>
 
           <PressableScale
             disabled={!daily.available}
@@ -80,7 +81,7 @@ export default function Lobby() {
             }}
             accessibilityLabel="Daily bonus">
             <View style={styles.daily}>
-              <Ionicons name="calendar-outline" size={18} color={colors.green} />
+              <Ionicons name="calendar-outline" size={18} color={colors.goldSoft} />
               <Text style={styles.dailyText}>
                 {daily.available ? `DAILY BONUS  +${formatChips(daily.amount)}` : 'DAILY BONUS CLAIMED. COME BACK TOMORROW'}
               </Text>
@@ -135,7 +136,7 @@ export default function Lobby() {
                       label="SIT"
                       tone="green"
                       disabled={!canSit}
-                      style={{ marginTop: 8, alignSelf: 'stretch' }}
+                      style={{ marginTop: 10, alignSelf: 'stretch' }}
                       testID="sit-silver"
                       onPress={() => router.push({ pathname: '/table', params: { mode, seats: String(seats) } })}
                     />
@@ -173,33 +174,34 @@ export default function Lobby() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.charcoal },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 6 },
-  balance: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(26,29,34,0.9)', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: colors.panelBorder },
-  chipIcon: { width: 18, height: 18, borderRadius: 9, backgroundColor: colors.felt, borderWidth: 3, borderColor: colors.goldSoft },
-  balanceText: { fontFamily: fonts.bold, fontSize: 18, color: colors.ink, fontVariant: ['tabular-nums'] },
-  iconBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(26,29,34,0.9)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.panelBorder },
-  scroll: { padding: 16, gap: 12, paddingBottom: 40 },
-  word: { fontFamily: fonts.black, fontSize: 44, color: colors.ink, textAlign: 'center', letterSpacing: 2, marginVertical: 4 },
-  daily: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(26,29,34,0.9)', borderRadius: 12, paddingVertical: 10, borderWidth: 1, borderColor: colors.panelBorder },
-  dailyText: { fontFamily: fonts.bold, fontSize: 14, color: colors.ink, letterSpacing: 0.5 },
-  segment: { flexDirection: 'row', backgroundColor: 'rgba(26,29,34,0.9)', borderRadius: 12, padding: 4, borderWidth: 1, borderColor: colors.panelBorder, gap: 4 },
-  segItem: { paddingVertical: 10, borderRadius: 9, alignItems: 'center' },
-  segOn: { backgroundColor: colors.felt, borderWidth: 1, borderColor: colors.green },
+  balance: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(14,16,20,0.92)', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: colors.goldDark },
+  chipIcon: { width: 18, height: 18, borderRadius: 9, backgroundColor: colors.feltHi, borderWidth: 2.5, borderColor: colors.goldSoft },
+  balanceText: { fontFamily: fonts.bold, fontSize: 18, color: colors.goldSoft, fontVariant: ['tabular-nums'] },
+  iconBtn: { width: 42, height: 42, borderRadius: 12, backgroundColor: 'rgba(14,16,20,0.92)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.panelBorder },
+  scroll: { padding: 16, gap: 14, paddingBottom: 40 },
+  word: { fontFamily: fonts.black, fontSize: 48, color: colors.ink, textAlign: 'center', letterSpacing: 3, marginTop: 4 },
+  sub: { fontFamily: fonts.medium, fontSize: 13, color: colors.goldSoft, textAlign: 'center', letterSpacing: 1.5, marginTop: -6, marginBottom: 4 },
+  daily: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(14,16,20,0.9)', borderRadius: 14, paddingVertical: 12, borderWidth: 1, borderColor: colors.goldDark },
+  dailyText: { fontFamily: fonts.bold, fontSize: 14, color: colors.ink, letterSpacing: 0.6 },
+  segment: { flexDirection: 'row', backgroundColor: 'rgba(14,16,20,0.9)', borderRadius: 14, padding: 4, borderWidth: 1, borderColor: colors.panelBorder, gap: 4 },
+  segItem: { paddingVertical: 11, borderRadius: 10, alignItems: 'center' },
+  segOn: { backgroundColor: colors.feltHi, borderWidth: 1, borderColor: colors.goldSoft },
   segText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.muted },
   modeHint: { fontFamily: fonts.regular, fontSize: 13, color: colors.warm, textAlign: 'center', marginTop: -4 },
   row: { flexDirection: 'row', gap: 8 },
-  pill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: 'rgba(26,29,34,0.9)', borderWidth: 1, borderColor: colors.panelBorder },
-  pillOn: { backgroundColor: colors.felt, borderColor: colors.green },
+  pill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11, borderRadius: 12, backgroundColor: 'rgba(14,16,20,0.9)', borderWidth: 1, borderColor: colors.panelBorder },
+  pillOn: { backgroundColor: colors.feltHi, borderColor: colors.goldSoft },
   pillText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.ink },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  tier: { width: '48%', flexGrow: 1, backgroundColor: 'rgba(26,29,34,0.92)', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: colors.panelBorder, alignItems: 'center' },
-  tierName: { fontFamily: fonts.bold, fontSize: 18, color: colors.ink, letterSpacing: 1 },
-  tierAnte: { fontFamily: fonts.bold, fontSize: 14, color: colors.green },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  tier: { width: '48%', flexGrow: 1, backgroundColor: 'rgba(14,16,20,0.94)', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: colors.goldDark, alignItems: 'center' },
+  tierName: { fontFamily: fonts.bold, fontSize: 18, color: colors.ink, letterSpacing: 1.2 },
+  tierAnte: { fontFamily: fonts.bold, fontSize: 14, color: colors.goldSoft },
   tierMin: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted },
-  soon: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10, paddingVertical: 12 },
+  soon: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 12, paddingVertical: 12 },
   soonText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted },
-  broke: { backgroundColor: 'rgba(107,30,42,0.35)', borderRadius: 12, padding: 12, gap: 8, borderWidth: 1, borderColor: colors.wine },
+  broke: { backgroundColor: 'rgba(122,36,48,0.4)', borderRadius: 14, padding: 14, gap: 8, borderWidth: 1, borderColor: colors.wine },
   brokeText: { fontFamily: fonts.medium, fontSize: 14, color: colors.ink, textAlign: 'center' },
-  legal: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted, textAlign: 'center', lineHeight: 17, marginTop: 6 },
-  toast: { position: 'absolute', bottom: 40, alignSelf: 'center', backgroundColor: colors.felt, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: colors.goldSoft },
+  legal: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted, textAlign: 'center', lineHeight: 17, marginTop: 8 },
+  toast: { position: 'absolute', bottom: 40, alignSelf: 'center', backgroundColor: colors.feltHi, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10, borderWidth: 1, borderColor: colors.goldSoft },
   toastText: { fontFamily: fonts.bold, color: colors.ink, fontSize: 14 },
 });
