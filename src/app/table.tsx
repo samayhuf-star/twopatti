@@ -18,6 +18,7 @@ import {
   GameState,
   Mode,
   SILVER,
+  TIERS,
   SeatInput,
   act,
   activePlayers,
@@ -38,7 +39,7 @@ import { colors, fonts, formatChips } from '../theme';
 
 const HUMAN = 'you';
 const DEAL_STEP = 90;
-const BOT_LEVELS: BotLevel[] = ['medium', 'easy', 'medium', 'easy'];
+const BOT_LEVELS: BotLevel[] = ['tight', 'loose', 'medium', 'easy'];
 
 /** Seat anchors as fractions of the felt, clockwise from the local player at the bottom. */
 const LAYOUT: Record<4 | 5, { x: number; y: number }[]> = {
@@ -69,11 +70,12 @@ function randomBotChips() {
 }
 
 export default function Table() {
-  const params = useLocalSearchParams<{ mode?: string; seats?: string }>();
+  const params = useLocalSearchParams<{ mode?: string; seats?: string; tier?: string }>();
   const mode: Mode = params.mode === 'centre' ? 'centre' : 'imaginary';
   const seatCount: 4 | 5 = params.seats === '4' ? 4 : 5;
   const store = useStore();
-  const config = useMemo(() => tableConfig(mode, SILVER), [mode]);
+  const tier = useMemo(() => TIERS.find(t => t.id === params.tier) ?? SILVER, [params.tier]);
+  const config = useMemo(() => tableConfig(mode, tier), [mode, tier]);
 
   const [felt, setFelt] = useState({ w: 0, h: 0 });
   const [handNo, setHandNo] = useState(0);
@@ -90,13 +92,10 @@ export default function Table() {
   const humanTurn = game.phase === 'betting' && game.turn === 0;
   const actions = lastActions(game);
 
-  // Persist the local wallet whenever the player's table stack changes (ante, bets, wins).
   useEffect(() => {
     store.setBalance(human.chips);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [human.chips]);
 
-  // Deal finishes after every card has landed.
   useEffect(() => {
     const total = (seatCount * 2 + (mode === 'centre' ? 1 : 0)) * DEAL_STEP + 350;
     const id = setTimeout(() => setDealing(false), total);
@@ -114,7 +113,6 @@ export default function Table() {
     });
   }, []);
 
-  // Bots act on their turn, after a short think.
   useEffect(() => {
     if (dealing || game.phase !== 'betting') return;
     const p = game.players[game.turn];
@@ -135,7 +133,6 @@ export default function Table() {
     return () => clearTimeout(id);
   }, [game, dealing]);
 
-  // Haptics for table events.
   const lastLogLen = useRef(0);
   useEffect(() => {
     const fresh = game.log.slice(lastLogLen.current);
@@ -159,6 +156,13 @@ export default function Table() {
   useEffect(() => {
     if (game.phase !== 'complete') return;
     store.countHand();
+    if (game.result) {
+      if (game.result.winnerId === HUMAN) {
+        store.recordWin(game.result.pot, !game.players[0].seen);
+      } else {
+        store.recordLoss();
+      }
+    }
     const a = setTimeout(() => {
       setShowResult(true);
       setBannerOn(true);
@@ -168,22 +172,19 @@ export default function Table() {
       clearTimeout(a);
       clearTimeout(b);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.phase]);
 
-  // My-turn nudge.
   useEffect(() => {
     if (humanTurn && !dealing) feel.medium();
   }, [humanTurn, dealing]);
 
   const nextHand = () => {
     const humanChips = game.players[0].chips;
-    if (humanChips < SILVER.minToSit) {
+    if (humanChips < tier.minToSit) {
       router.back();
       return;
     }
-    // Computer players are refilled between hands so the table stays full.
-    const bots = game.players.slice(1).map(p => (p.chips < SILVER.minToSit * 2 ? randomBotChips() : p.chips));
+    const bots = game.players.slice(1).map(p => (p.chips < tier.minToSit * 2 ? randomBotChips() : p.chips));
     const d = (dealer + 1) % seatCount;
     lastLogLen.current = 0;
     setDealer(d);
@@ -194,10 +195,7 @@ export default function Table() {
     setHandNo(n => n + 1);
   };
 
-  const leave = () => {
-    // Leaving mid-hand is a fold; chips already in the pot stay there.
-    router.back();
-  };
+  const leave = () => router.back();
 
   const onFeltLayout = (e: LayoutChangeEvent) => setFelt({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height });
 
@@ -206,7 +204,6 @@ export default function Table() {
   const n = seatCount;
   const dealIndex = (seat: number, round: number) => round * n + ((seat - dealer - 1 + n) % n);
 
-  // The local player's hand label.
   let myHand: { label: string; third: GameState['centre'] } | null = null;
   if (human.seen && !human.folded) {
     if (mode === 'imaginary') {
@@ -251,8 +248,6 @@ export default function Table() {
                   <View style={[styles.dealerTag, { left: dealerPt.x - 40, top: dealerPt.y }]}>
                     <Text style={styles.dealerText}>DEALER</Text>
                   </View>
-
-                  {/* Centre card or the imaginary cue */}
                   <View style={[styles.centre, { left: felt.w / 2 - 60, top: felt.h * 0.25 }]}>
                     {mode === 'centre' && game.centre ? (
                       <PlayingCard
@@ -289,7 +284,6 @@ export default function Table() {
                     const badge = p.folded ? 'Folded' : p.seen ? 'Seen' : 'Blind';
                     const extra = (shown?.imaginary || (isMe && !shown && myHand?.third)) ? 1 : 0;
                     const rowW = (2 + extra) * (cw + 3);
-                    // Human: cards centred above the seat. Bots: cards beside the avatar, towards the middle of the table.
                     const leftSide = a.x <= 0.5;
                     const cardsLeft = isMe ? cx - rowW / 2 : leftSide ? cx + 34 : cx - 34 - rowW;
                     const cardsTop = isMe ? cy - 50 - ch - 2 : cy - 12;
@@ -341,7 +335,6 @@ export default function Table() {
           </View>
         </View>
 
-        {/* Action area */}
         <View style={styles.bar}>
           {myHand && !result && <Text style={styles.myHand}>Your hand: {myHand.label}</Text>}
           {result ? null : dealing ? (
@@ -394,7 +387,7 @@ export default function Table() {
                   return (
                     <View key={h.playerId} style={styles.resRow}>
                       <Text style={[styles.resName, h.playerId === result.winnerId && { color: colors.highlight }]}>
-                        {h.playerId === result.winnerId ? '\u{1F451} ' : ''}
+                        {h.playerId === result.winnerId ? '👑 ' : ''}
                         {p.name}
                       </Text>
                       <Text style={styles.resHand} numberOfLines={1}>
@@ -412,7 +405,7 @@ export default function Table() {
               <Button style={{ flex: 1 }} label="LEAVE" tone="dark" onPress={leave} />
               <Button
                 style={{ flex: 2 }}
-                label={human.chips >= SILVER.minToSit ? 'NEXT HAND' : 'BACK TO LOBBY'}
+                label={human.chips >= tier.minToSit ? 'NEXT HAND' : 'BACK TO LOBBY'}
                 onPress={nextHand}
                 testID="next-hand"
               />
@@ -432,7 +425,7 @@ const styles = StyleSheet.create({
   balance: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.panel, borderRadius: 19, paddingHorizontal: 12, height: 38, borderWidth: 1, borderColor: colors.panelBorder },
   chipIcon: { width: 16, height: 16, borderRadius: 8, backgroundColor: colors.felt, borderWidth: 3, borderColor: colors.goldSoft },
   balanceText: { fontFamily: fonts.bold, fontSize: 16, color: colors.ink, fontVariant: ['tabular-nums'] },
-  feltWrap: { flex: 1, paddingHorizontal: 8, paddingTop: 36, paddingBottom: 6 },
+  feltWrap: { flex: 1, paddingHorizontal: 8, paddingTop: 36, paddingBottom: 8 },
   rail: { flex: 1, borderRadius: 160, backgroundColor: colors.rail, padding: 10, shadowColor: '#000', shadowOpacity: 0.6, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } },
   felt: { flex: 1, borderRadius: 150, overflow: 'visible' },
   dealerTag: { position: 'absolute', width: 80, alignItems: 'center', paddingVertical: 3, borderRadius: 8, backgroundColor: 'rgba(20,22,26,0.7)', borderWidth: 1, borderColor: colors.gold },
