@@ -64,24 +64,33 @@ export function PlayingCard({ card, faceUp, width = 44, dealFrom, dealDelay = 0,
 
   const red = card && (card.suit === 'H' || card.suit === 'D');
   const showFace = faceUp && card;
-  const r = width * 0.14;
+  const r = width * 0.16;
 
   return (
     <Animated.View style={[{ width, height }, anim, dim && { opacity: 0.45 }]}>
       {showFace ? (
         <View style={[styles.face, imaginary && styles.imaginary, { borderRadius: r }]}>
-          <View style={styles.faceInner}>
-            <Text style={[styles.rank, { fontSize: width * 0.36, color: red ? colors.red : colors.black }]}>{rankLabel(card.rank)}</Text>
-            <Text style={[styles.suit, { fontSize: width * 0.4, color: red ? colors.red : colors.black }, imaginary && styles.imgSuit]}>
+          <View style={[styles.corner, { top: 3, left: 4 }]}>
+            <Text style={[styles.cornerRank, { fontSize: width * 0.22, color: red ? colors.red : colors.black }]}>{rankLabel(card.rank)}</Text>
+            <Text style={[styles.cornerSuit, { fontSize: width * 0.18, color: red ? colors.red : colors.black }]}>{SUIT_SYMBOL[card.suit]}</Text>
+          </View>
+          <View style={styles.center}>
+            <Text style={[styles.centerSuit, { fontSize: width * 0.52, color: red ? colors.red : colors.black }, imaginary && styles.imgSuit]}>
               {SUIT_SYMBOL[card.suit]}
             </Text>
+          </View>
+          <View style={[styles.corner, styles.cornerBR, { bottom: 3, right: 4 }]}>
+            <Text style={[styles.cornerRank, { fontSize: width * 0.22, color: red ? colors.red : colors.black }]}>{rankLabel(card.rank)}</Text>
+            <Text style={[styles.cornerSuit, { fontSize: width * 0.18, color: red ? colors.red : colors.black }]}>{SUIT_SYMBOL[card.suit]}</Text>
           </View>
         </View>
       ) : (
         <View style={[styles.back, { borderRadius: r }]}>
-          <View style={[styles.backInner, { borderRadius: r * 0.7 }]}>
-            <View style={[styles.medallion, { width: width * 0.42, height: width * 0.42, borderRadius: width * 0.21 }]}>
-              <Text style={[styles.backMark, { fontSize: width * 0.22 }]}>2</Text>
+          <View style={[styles.backInner, { borderRadius: r * 0.65 }]}>
+            <View style={[styles.ornate, { width: width * 0.55, height: width * 0.55, borderRadius: width * 0.12 }]}>
+              <View style={[styles.innerOrnate, { borderRadius: width * 0.08 }]}>
+                <Text style={[styles.backMark, { fontSize: width * 0.28 }]}>2</Text>
+              </View>
             </View>
           </View>
         </View>
@@ -93,52 +102,58 @@ export function PlayingCard({ card, faceUp, width = 44, dealFrom, dealDelay = 0,
 const styles = StyleSheet.create({
   face: {
     flex: 1,
-    backgroundColor: '#FAF6EE',
+    backgroundColor: '#FBF7EF',
     borderWidth: 1.5,
     borderColor: colors.gold,
-    padding: 2,
+    padding: 1,
     shadowColor: '#000',
-    shadowOpacity: 0.45,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
-  faceInner: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 0.5,
-    borderColor: 'rgba(212,175,106,0.4)',
-    borderRadius: 6,
-  },
-  imaginary: { borderStyle: 'dashed', borderColor: colors.goldSoft, borderWidth: 2, backgroundColor: '#F5EDD8' },
-  rank: { fontFamily: fonts.bold },
-  suit: { marginTop: -2 },
-  imgSuit: { opacity: 0.5 },
+  imaginary: { borderStyle: 'dashed', borderColor: colors.goldSoft, borderWidth: 2, backgroundColor: '#F3EAD4' },
+  corner: { position: 'absolute', alignItems: 'center' },
+  cornerBR: { transform: [{ rotate: '180deg' }] },
+  cornerRank: { fontFamily: fonts.bold, lineHeight: undefined },
+  cornerSuit: { marginTop: -2 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  centerSuit: { textAlign: 'center' },
+  imgSuit: { opacity: 0.45 },
   back: {
     flex: 1,
-    backgroundColor: '#0F1A2E',
+    backgroundColor: '#0C1526',
     borderWidth: 1.5,
     borderColor: colors.gold,
     padding: 3,
     shadowColor: '#000',
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
   backInner: {
     flex: 1,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,106,0.6)',
+    borderColor: 'rgba(212,175,106,0.7)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#162036',
+    backgroundColor: '#121C32',
   },
-  medallion: {
+  ornate: {
     borderWidth: 1.5,
     borderColor: colors.goldSoft,
-    backgroundColor: 'rgba(212,175,106,0.15)',
+    backgroundColor: 'rgba(212,175,106,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 2,
+  },
+  innerOrnate: {
+    flex: 1,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: colors.goldDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.25)',
   },
   backMark: { fontFamily: fonts.black, color: colors.goldSoft },
 });
