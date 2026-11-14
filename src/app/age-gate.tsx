@@ -8,7 +8,7 @@ import { useStore } from '../lib/store';
 import { ROOM_BG } from '../lib/art';
 import { colors, fonts } from '../theme';
 
-/** First-launch 18+ gate (spec sections 1 and 12). Shown before the lobby. */
+/** First-launch 17+ gate. Shown before the lobby. The store rating is 17+. */
 export default function AgeGate() {
   const { confirmAge } = useStore();
   const [under, setUnder] = useState(false);
@@ -22,18 +22,18 @@ export default function AgeGate() {
         <View style={styles.card}>
           {under ? (
             <>
-              <Text style={styles.h}>Sorry, 2 Patti is for adults</Text>
-              <Text style={styles.p}>You must be 18 or older to play. Please close the app.</Text>
+              <Text style={styles.h}>Sorry, 2 Patti is for ages 17 and up</Text>
+              <Text style={styles.p}>You must be 17 or older to play. Please close the app.</Text>
               {Platform.OS === 'android' && <Button label="CLOSE" tone="dark" onPress={() => BackHandler.exitApp()} />}
             </>
           ) : (
             <>
-              <Text style={styles.h}>Are you 18 or older?</Text>
-              <Text style={styles.p}>2 Patti is a social card game for adults 18+. It uses virtual chips only.</Text>
-              <Text style={styles.small}>{CHIP_DISCLAIMER} No real-money gambling, no prizes.</Text>
+              <Text style={styles.h}>Are you 17 or older?</Text>
+              <Text style={styles.p}>2 Patti is a simulated card game for ages 17 and up. It uses virtual chips only. There is no real-money wagering.</Text>
+              <Text style={styles.small}>{CHIP_DISCLAIMER} No prizes.</Text>
               <View style={{ gap: 10, marginTop: 6 }}>
-                <Button label="I AM 18 OR OLDER" onPress={confirmAge} testID="age-yes" />
-                <Button label="I AM UNDER 18" tone="dark" onPress={() => setUnder(true)} testID="age-no" />
+                <Button label="I AM 17 OR OLDER" onPress={confirmAge} testID="age-yes" />
+                <Button label="I AM UNDER 17" tone="dark" onPress={() => setUnder(true)} testID="age-no" />
               </View>
             </>
           )}

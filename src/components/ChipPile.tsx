@@ -5,14 +5,40 @@ import Svg, { Ellipse, G, Path, Rect } from 'react-native-svg';
 import { SPOTS, potStacks } from '../lib/pot';
 import { colors, fonts, formatChips } from '../theme';
 
-const CHIP_COLORS = [colors.wine, colors.feltHi, colors.ivory, colors.navy, colors.goldDark, colors.felt, colors.navy];
+/** Red, green and white casino chips, as in the v4 table art. */
+const CHIP = [
+  { face: '#B3261E', edge: '#7E1A15', stripe: '#F4EFE6' },
+  { face: '#1E7A43', edge: '#14552F', stripe: '#F4EFE6' },
+  { face: '#EDE8DC', edge: '#B8B2A3', stripe: '#B3261E' },
+];
+const CW = 26; // chip width
+const CT = 4.2; // chip thickness
+const RY = 6.5; // chip top ellipse radius y
 
-export function ChipPile({ amount, ante }: { amount: number; ante: number }) {
+function Chip({ x, y, kind }: { x: number; y: number; kind: number }) {
+  const c = CHIP[kind % CHIP.length];
+  const rx = CW / 2;
+  // Side band, then the top face with edge spots.
+  return (
+    <G>
+      <Path d={`M${x - rx},${y} v${CT} a${rx},${RY} 0 0 0 ${CW},0 v${-CT} z`} fill={c.edge} />
+      <Rect x={x - 2} y={y + RY - 0.5} width={4} height={CT} fill={c.stripe} opacity={0.9} />
+      <Rect x={x - rx * 0.78} y={y + RY * 0.55} width={3} height={CT} fill={c.stripe} opacity={0.75} />
+      <Rect x={x + rx * 0.78 - 3} y={y + RY * 0.55} width={3} height={CT} fill={c.stripe} opacity={0.75} />
+      <Ellipse cx={x} cy={y} rx={rx} ry={RY} fill={c.face} />
+      <Ellipse cx={x} cy={y} rx={rx} ry={RY} fill="none" stroke={c.stripe} strokeWidth={2.2} strokeDasharray="4 5.5" />
+      <Ellipse cx={x} cy={y} rx={rx * 0.58} ry={RY * 0.58} fill="none" stroke={c.stripe} strokeOpacity={0.55} strokeWidth={0.8} />
+    </G>
+  );
+}
+
+/** Pot chips in the middle of the felt. Stacks grow with the pot and pulse when chips arrive. */
+export function ChipPile({ amount, ante, label = 'POT' }: { amount: number; ante: number; label?: string }) {
   const reduce = useReducedMotion();
   const pulse = useSharedValue(1);
   useEffect(() => {
     if (reduce || amount === 0) return;
-    pulse.value = withSequence(withTiming(1.15, { duration: 90 }), withSpring(1, { damping: 10, stiffness: 260 }));
+    pulse.value = withSequence(withTiming(1.08, { duration: 90 }), withSpring(1, { damping: 10, stiffness: 260 }));
   }, [amount, reduce, pulse]);
   const anim = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
   const stacks = potStacks(amount, ante);
@@ -21,18 +47,14 @@ export function ChipPile({ amount, ante }: { amount: number; ante: number }) {
   const baseY = H - RY - CT - 18;
   const order = stacks.map((n, i) => ({ n, i, spot: SPOTS[i] })).sort((a, b) => a.spot.y - b.spot.y);
   return (
-    <View style={styles.wrap} accessibilityLabel={`Pot ${formatChips(amount)} chips`}>
-      <Animated.View style={[styles.pile, anim]}>
-        {amount > 0 &&
-          Array.from({ length: stacks }).map((_, i) => (
-            <View key={i} style={[styles.stack, { left: (i % 4) * 18 + (i >= 4 ? 9 : 0), top: i >= 4 ? 14 : 0 }]}>
-              {Array.from({ length: 3 }).map((__, j) => (
-                <View key={j} style={[styles.chip, { backgroundColor: CHIP_COLORS[(i + j) % CHIP_COLORS.length], bottom: j * 4.5 }]}>
-                  <View style={styles.chipRing} />
-                </View>
-              ))}
-            </View>
-          ))}
+    <View style={styles.wrap} accessibilityLabel={`${label} ${formatChips(amount)} chips`}>
+      <Animated.View style={[{ width: W, height: H }, anim]}>
+        <Svg width={W} height={H}>
+          <Ellipse cx={W / 2} cy={baseY + RY + CT + 6} rx={52} ry={12} fill="#000" opacity={stacks.length ? 0.22 : 0} />
+          {order.map(({ n, i, spot }) =>
+            Array.from({ length: n }).map((_, j) => <Chip key={`${i}-${j}`} x={W / 2 + spot.x} y={baseY + spot.y + 10 - j * CT} kind={i + (j > 3 ? 1 : 0)} />),
+          )}
+        </Svg>
       </Animated.View>
       <Text style={styles.pot}>
         {label} {formatChips(amount)}
@@ -43,18 +65,5 @@ export function ChipPile({ amount, ante }: { amount: number; ante: number }) {
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center' },
-  pile: { width: 80, height: 38 },
-  stack: { position: 'absolute', width: 20, height: 24 },
-  chip: {
-    position: 'absolute',
-    width: 20,
-    height: 9,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: colors.goldSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chipRing: { width: 10, height: 4, borderRadius: 5, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
-  pot: { marginTop: 8, fontFamily: fonts.bold, color: colors.goldSoft, fontSize: 15, letterSpacing: 0.8, fontVariant: ['tabular-nums'] },
+  pot: { marginTop: -6, fontFamily: fonts.bold, color: colors.ink, fontSize: 15, letterSpacing: 0.8, fontVariant: ['tabular-nums'], textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 3 },
 });

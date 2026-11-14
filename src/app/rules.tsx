@@ -74,7 +74,7 @@ export default function Rules() {
         <P>Every opponent at this table is a computer player, marked BOT.</P>
 
         <H>Chips</H>
-        <P>{`${CHIP_DISCLAIMER} 2 Patti is for adults 18+ and is for entertainment only.`}</P>
+        <P>{`${CHIP_DISCLAIMER} 2 Patti is for ages 17 and up. It is simulated gambling for entertainment only. No real money.`}</P>
       </ScrollView>
     </SafeAreaView>
   );

@@ -35,6 +35,7 @@ function Shell() {
             <Stack.Screen name="index" />
             <Stack.Screen name="table" options={{ gestureEnabled: false }} />
             <Stack.Screen name="rules" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="tutorial" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
           </Stack.Protected>
         </Stack>

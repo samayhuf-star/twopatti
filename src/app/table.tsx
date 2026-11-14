@@ -275,7 +275,7 @@ export default function Table() {
                   <View style={[styles.dealerTag, { left: dealerPt.x - 40, top: dealerPt.y }]}>
                     <Text style={styles.dealerText}>DEALER</Text>
                   </View>
-                  <View style={[styles.centre, { left: felt.w / 2 - 60, top: felt.h * 0.25 }]}>
+                  <View style={[styles.centre, { left: felt.w / 2 - 60, top: felt.h * 0.02 }]}>
                     {mode === 'centre' && game.centre ? (
                       <PlayingCard
                         key={`c${handNo}`}
@@ -310,7 +310,8 @@ export default function Table() {
                     const won = result?.winnerId === p.id;
                     const badge = p.folded ? 'Folded' : p.seen ? 'Seen' : 'Blind';
                     const extra = (shown?.imaginary || (isMe && !shown && myHand?.third)) ? 1 : 0;
-                    const rowW = (2 + extra) * (cw + 3);
+                    const gap = extra ? (isMe ? -14 : -8) : 3;
+                    const rowW = (2 + extra) * cw + (1 + extra) * gap;
                     const leftSide = a.x <= 0.5;
                     const cardsLeft = isMe ? cx + 38 : leftSide ? cx + 34 : cx - 34 - rowW;
                     const cardsTop = isMe ? cy - 20 : cy - 12;
@@ -423,7 +424,7 @@ export default function Table() {
                   return (
                     <View key={h.playerId} style={styles.resRow}>
                       <Text style={[styles.resName, h.playerId === result.winnerId && { color: colors.highlight }]}>
-                        {h.playerId === result.winnerId ? '👑 ' : ''}
+                        {h.playerId === result.winnerId ? 'Winner · ' : ''}
                         {p.name}
                       </Text>
                       <Text style={styles.resHand} numberOfLines={1}>

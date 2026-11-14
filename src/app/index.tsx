@@ -11,7 +11,7 @@ import { AGE_NOTICE, CHIP_DISCLAIMER } from '../lib/config';
 import { nextDaily } from '../lib/daily';
 import { feel } from '../lib/feel';
 import { useStore } from '../lib/store';
-import { BOT_PROFILES, ROOM_BG } from '../lib/art';
+import { ROOM_BG } from '../lib/art';
 import { colors, fonts, formatChips } from '../theme';
 
 const OPEN_TIERS = new Set(['silver', 'gold', 'diamond']);
@@ -132,12 +132,6 @@ export default function Lobby() {
               <Ionicons name="desktop-outline" size={16} color={colors.ink} />
               <Text style={styles.pillText}>Computer</Text>
             </View>
-            {SHOW_ONLINE_SOON && (
-              <View style={styles.pill}>
-                <Ionicons name="globe-outline" size={16} color={colors.muted} />
-                <Text style={[styles.pillText, { color: colors.muted }]}>Online soon</Text>
-              </View>
-            )}
           </View>
 
           <Segment
@@ -150,40 +144,24 @@ export default function Lobby() {
           />
 
           <View style={styles.grid}>
-            {TIERS.filter(t => OPEN_TIERS.has(t.id) || t.ante <= 5000).map(t => {
-              const open = OPEN_TIERS.has(t.id);
+            {TIERS.filter(t => OPEN_TIERS.has(t.id)).map(t => {
               const canSit = store.balance >= t.minToSit;
               return (
-                <View key={t.id} style={[styles.tier, !open && { opacity: 0.55 }]}>
+                <View key={t.id} style={styles.tier}>
                   <Text style={styles.tierName}>{t.name.toUpperCase()}</Text>
                   <Text style={styles.tierAnte}>ANTE {t.ante >= 1000 ? `${t.ante / 1000}K` : t.ante}</Text>
                   <Text style={styles.tierMin}>Min {formatChips(t.minToSit)}</Text>
                   <Text style={styles.tierMin}>Blind cap {formatChips(t.blindCap)}</Text>
-                  {open ? (
-                    <Button
-                      label="SIT"
-                      tone="green"
-                      disabled={!canSit}
-                      style={{ marginTop: 10, alignSelf: 'stretch' }}
-                      onPress={() => router.push({ pathname: '/table', params: { mode, seats: String(seats), tier: t.id } })}
-                    />
-                  ) : (
-                    <View style={styles.soon}>
-                      <Ionicons name="lock-closed" size={13} color={colors.muted} />
-                      <Text style={styles.soonText}>Coming soon</Text>
-                    </View>
-                  )}
+                  <Button
+                    label="SIT"
+                    tone="green"
+                    disabled={!canSit}
+                    style={{ marginTop: 10, alignSelf: 'stretch' }}
+                    onPress={() => router.push({ pathname: '/table', params: { mode, seats: String(seats), tier: t.id } })}
+                  />
                 </View>
-                <Button
-                  label="SIT"
-                  tone="green"
-                  disabled={!canSit}
-                  style={{ marginTop: 8, alignSelf: 'stretch' }}
-                  testID="sit-silver"
-                  onPress={() => router.push({ pathname: '/table', params: { mode, seats: String(seats) } })}
-                />
-              </View>
-            ))}
+              );
+            })}
           </View>
 
           <Text style={styles.legal}>
@@ -230,8 +208,6 @@ const styles = StyleSheet.create({
   tierName: { fontFamily: fonts.bold, fontSize: 18, color: colors.ink, letterSpacing: 1.2 },
   tierAnte: { fontFamily: fonts.bold, fontSize: 14, color: colors.goldSoft },
   tierMin: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted },
-  soon: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 12, paddingVertical: 12 },
-  soonText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted },
   legal: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted, textAlign: 'center', lineHeight: 17, marginTop: 8 },
   toast: { position: 'absolute', bottom: 40, alignSelf: 'center', backgroundColor: colors.feltHi, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10, borderWidth: 1, borderColor: colors.goldSoft },
   toastText: { fontFamily: fonts.bold, color: colors.ink, fontSize: 14 },
