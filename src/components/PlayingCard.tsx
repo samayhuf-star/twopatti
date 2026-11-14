@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -9,7 +10,8 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { Card, SUIT_SYMBOL, rankLabel } from '../engine';
+import { Card, SUIT_SYMBOL, cardLabel, rankLabel } from '../engine';
+import { CARD_BACK, CARD_RATIO, cardFace } from '../lib/art';
 import { colors, fonts } from '../theme';
 
 type Props = {
@@ -27,7 +29,7 @@ type Props = {
 
 export function PlayingCard({ card, faceUp, width = 44, dealFrom, dealDelay = 0, imaginary, dim, rotate = 0, slowFlip, onDealt }: Props) {
   const reduce = useReducedMotion();
-  const height = Math.round(width * 1.4);
+  const height = Math.round(width * CARD_RATIO);
   const tx = useSharedValue(reduce || !dealFrom ? 0 : dealFrom.x);
   const ty = useSharedValue(reduce || !dealFrom ? 0 : dealFrom.y);
   const op = useSharedValue(reduce || !dealFrom ? 1 : 0);
@@ -100,7 +102,7 @@ export function PlayingCard({ card, faceUp, width = 44, dealFrom, dealDelay = 0,
 }
 
 const styles = StyleSheet.create({
-  face: {
+  shadow: {
     flex: 1,
     backgroundColor: '#FBF7EF',
     borderWidth: 1.5,

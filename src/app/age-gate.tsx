@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../components/Button';
 import { CHIP_DISCLAIMER } from '../lib/config';
 import { useStore } from '../lib/store';
+import { ROOM_BG } from '../lib/art';
 import { colors, fonts } from '../theme';
 
 /** First-launch 18+ gate (spec sections 1 and 12). Shown before the lobby. */
@@ -13,7 +14,8 @@ export default function AgeGate() {
   const [under, setUnder] = useState(false);
   return (
     <View style={styles.root}>
-      <Image source={require('../../assets/casino-bg.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <Image source={ROOM_BG} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" blurRadius={14} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(14,16,20,0.55)' }]} />
       <SafeAreaView style={styles.safe}>
         <Text style={styles.word}>2 PATTI</Text>
         <Text style={styles.tag}>Two cards. One table. Your best third card.</Text>

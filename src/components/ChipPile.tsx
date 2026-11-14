@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Svg, { Ellipse, G, Path, Rect } from 'react-native-svg';
+import { SPOTS, potStacks } from '../lib/pot';
 import { colors, fonts, formatChips } from '../theme';
 
 const CHIP_COLORS = [colors.wine, colors.feltHi, colors.ivory, colors.navy, colors.goldDark, colors.felt, colors.navy];
@@ -13,7 +15,11 @@ export function ChipPile({ amount, ante }: { amount: number; ante: number }) {
     pulse.value = withSequence(withTiming(1.15, { duration: 90 }), withSpring(1, { damping: 10, stiffness: 260 }));
   }, [amount, reduce, pulse]);
   const anim = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
-  const stacks = Math.min(7, Math.max(1, Math.ceil(amount / (ante * 6))));
+  const stacks = potStacks(amount, ante);
+  const W = 120;
+  const H = 86;
+  const baseY = H - RY - CT - 18;
+  const order = stacks.map((n, i) => ({ n, i, spot: SPOTS[i] })).sort((a, b) => a.spot.y - b.spot.y);
   return (
     <View style={styles.wrap} accessibilityLabel={`Pot ${formatChips(amount)} chips`}>
       <Animated.View style={[styles.pile, anim]}>
@@ -28,7 +34,9 @@ export function ChipPile({ amount, ante }: { amount: number; ante: number }) {
             </View>
           ))}
       </Animated.View>
-      <Text style={styles.pot}>POT {formatChips(amount)}</Text>
+      <Text style={styles.pot}>
+        {label} {formatChips(amount)}
+      </Text>
     </View>
   );
 }

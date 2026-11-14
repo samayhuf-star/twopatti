@@ -2,7 +2,7 @@ import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { colors, fonts } from '../theme';
 import { PressableScale } from './PressableScale';
 
-type Tone = 'gold' | 'wine' | 'green' | 'dark';
+type Tone = 'gold' | 'tan' | 'wine' | 'green' | 'dark';
 
 const bg: Record<Tone, string> = {
   gold: colors.gold,
@@ -25,6 +25,7 @@ export function Button({
   disabled,
   style,
   testID,
+  compact,
 }: {
   label: string;
   sub?: string;
@@ -33,6 +34,8 @@ export function Button({
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
   testID?: string;
+  /** Tighter padding and type, for the one-row table action bar. */
+  compact?: boolean;
 }) {
   return (
     <PressableScale onPress={onPress} disabled={disabled} style={style} accessibilityLabel={sub ? `${label} ${sub}` : label} testID={testID}>

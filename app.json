@@ -35,7 +35,8 @@
             ]
           }
         ]
-      }
+      },
+      "buildNumber": "2"
     },
     "android": {
       "package": "com.samayvashsht.twopatti",

@@ -11,6 +11,7 @@ import { AGE_NOTICE, CHIP_DISCLAIMER } from '../lib/config';
 import { nextDaily } from '../lib/daily';
 import { feel } from '../lib/feel';
 import { useStore } from '../lib/store';
+import { BOT_PROFILES, ROOM_BG } from '../lib/art';
 import { colors, fonts, formatChips } from '../theme';
 
 const OPEN_TIERS = new Set(['silver', 'gold', 'diamond']);
@@ -47,7 +48,8 @@ export default function Lobby() {
 
   return (
     <View style={styles.root}>
-      <Image source={require('../../assets/casino-bg.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <Image source={ROOM_BG} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" blurRadius={14} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(14,16,20,0.55)' }]} />
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
         <View style={styles.top}>
           <View style={styles.balance} accessibilityLabel={`Balance ${formatChips(store.balance)} chips`}>
@@ -130,10 +132,12 @@ export default function Lobby() {
               <Ionicons name="desktop-outline" size={16} color={colors.ink} />
               <Text style={styles.pillText}>Computer</Text>
             </View>
-            <View style={styles.pill}>
-              <Ionicons name="globe-outline" size={16} color={colors.muted} />
-              <Text style={[styles.pillText, { color: colors.muted }]}>Online soon</Text>
-            </View>
+            {SHOW_ONLINE_SOON && (
+              <View style={styles.pill}>
+                <Ionicons name="globe-outline" size={16} color={colors.muted} />
+                <Text style={[styles.pillText, { color: colors.muted }]}>Online soon</Text>
+              </View>
+            )}
           </View>
 
           <Segment
@@ -170,8 +174,16 @@ export default function Lobby() {
                     </View>
                   )}
                 </View>
-              );
-            })}
+                <Button
+                  label="SIT"
+                  tone="green"
+                  disabled={!canSit}
+                  style={{ marginTop: 8, alignSelf: 'stretch' }}
+                  testID="sit-silver"
+                  onPress={() => router.push({ pathname: '/table', params: { mode, seats: String(seats) } })}
+                />
+              </View>
+            ))}
           </View>
 
           <Text style={styles.legal}>

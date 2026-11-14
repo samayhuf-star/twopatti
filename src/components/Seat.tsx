@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -9,6 +10,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { portraitFor } from '../lib/art';
 import { colors, fonts, formatChips } from '../theme';
 
 type Props = {
@@ -42,7 +44,7 @@ export function Seat({ name, isBot, chips, badge, active, winner, dim, lastActio
 
   const ringStyle = useAnimatedStyle(() => ({ opacity: ring.value }));
   const crownStyle = useAnimatedStyle(() => ({ opacity: crown.value, transform: [{ scale: 0.4 + crown.value * 0.6 }, { translateY: (1 - crown.value) * 10 }] }));
-  const initials = isBot ? name.replace('Bot ', 'B') : 'YOU';
+  const portrait = isBot ? portraitFor(name) : undefined;
 
   return (
     <View style={[styles.wrap, dim && { opacity: 0.45 }]} accessibilityLabel={`${name}${isBot ? ', computer player' : ''}, ${formatChips(chips)} chips${badge ? `, ${badge}` : ''}`}>
