@@ -16,14 +16,11 @@ type Props = {
   card?: Card | null;
   faceUp: boolean;
   width?: number;
-  /** Deal flight: start offset relative to the final position, and a stagger delay. */
   dealFrom?: { x: number; y: number };
   dealDelay?: number;
-  /** Rendered as an imaginary card: dashed edge, rank only, no suit. */
   imaginary?: boolean;
   dim?: boolean;
   rotate?: number;
-  /** Slow, dramatic flip for the centre reveal. */
   slowFlip?: boolean;
   onDealt?: () => void;
 };
@@ -44,15 +41,11 @@ export function PlayingCard({ card, faceUp, width = 44, dealFrom, dealDelay = 0,
       return;
     }
     const t = { duration: 320, easing: Easing.out(Easing.cubic) };
-     
     op.value = withDelay(dealDelay, withTiming(1, { duration: 120 }));
-     
     tx.value = withDelay(dealDelay, withTiming(0, t));
-     
     ty.value = withDelay(dealDelay, withTiming(0, t));
     const id = setTimeout(() => onDealt?.(), dealDelay);
     return () => clearTimeout(id);
-    // Deal runs once per mount (each hand remounts its cards).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -61,7 +54,6 @@ export function PlayingCard({ card, faceUp, width = 44, dealFrom, dealDelay = 0,
     firstFace.current = faceUp;
     if (reduce) return;
     const d = slowFlip ? 380 : 160;
-     
     flip.value = withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: d, easing: Easing.out(Easing.back(1.4)) }));
   }, [faceUp, reduce, slowFlip, flip]);
 
@@ -72,19 +64,25 @@ export function PlayingCard({ card, faceUp, width = 44, dealFrom, dealDelay = 0,
 
   const red = card && (card.suit === 'H' || card.suit === 'D');
   const showFace = faceUp && card;
+  const r = width * 0.14;
+
   return (
     <Animated.View style={[{ width, height }, anim, dim && { opacity: 0.45 }]}>
       {showFace ? (
-        <View style={[styles.face, imaginary && styles.imaginary, { borderRadius: width * 0.12 }]}>
-          <Text style={[styles.rank, { fontSize: width * 0.38, color: red ? colors.red : colors.black }]}>{rankLabel(card.rank)}</Text>
-          <Text style={[styles.suit, { fontSize: width * 0.42, color: red ? colors.red : colors.black }, imaginary && styles.imgSuit]}>
-            {SUIT_SYMBOL[card.suit]}
-          </Text>
+        <View style={[styles.face, imaginary && styles.imaginary, { borderRadius: r }]}>
+          <View style={styles.faceInner}>
+            <Text style={[styles.rank, { fontSize: width * 0.36, color: red ? colors.red : colors.black }]}>{rankLabel(card.rank)}</Text>
+            <Text style={[styles.suit, { fontSize: width * 0.4, color: red ? colors.red : colors.black }, imaginary && styles.imgSuit]}>
+              {SUIT_SYMBOL[card.suit]}
+            </Text>
+          </View>
         </View>
       ) : (
-        <View style={[styles.back, { borderRadius: width * 0.12 }]}>
-          <View style={[styles.backInner, { borderRadius: width * 0.08 }]}>
-            <View style={[styles.medallion, { width: width * 0.36, height: width * 0.36, borderRadius: width * 0.18 }]} />
+        <View style={[styles.back, { borderRadius: r }]}>
+          <View style={[styles.backInner, { borderRadius: r * 0.7 }]}>
+            <View style={[styles.medallion, { width: width * 0.42, height: width * 0.42, borderRadius: width * 0.21 }]}>
+              <Text style={[styles.backMark, { fontSize: width * 0.22 }]}>2</Text>
+            </View>
           </View>
         </View>
       )}
@@ -95,31 +93,52 @@ export function PlayingCard({ card, faceUp, width = 44, dealFrom, dealDelay = 0,
 const styles = StyleSheet.create({
   face: {
     flex: 1,
-    backgroundColor: colors.ivory,
+    backgroundColor: '#FAF6EE',
     borderWidth: 1.5,
     borderColor: colors.gold,
+    padding: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.45,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  faceInner: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    borderWidth: 0.5,
+    borderColor: 'rgba(212,175,106,0.4)',
+    borderRadius: 6,
   },
-  imaginary: { borderStyle: 'dashed', borderColor: colors.goldSoft, borderWidth: 2, backgroundColor: '#EFE6CC' },
-  rank: { fontFamily: fonts.bold, lineHeight: undefined },
-  suit: { marginTop: -4 },
-  imgSuit: { opacity: 0.45 },
+  imaginary: { borderStyle: 'dashed', borderColor: colors.goldSoft, borderWidth: 2, backgroundColor: '#F5EDD8' },
+  rank: { fontFamily: fonts.bold },
+  suit: { marginTop: -2 },
+  imgSuit: { opacity: 0.5 },
   back: {
     flex: 1,
-    backgroundColor: colors.navy,
+    backgroundColor: '#0F1A2E',
     borderWidth: 1.5,
     borderColor: colors.gold,
     padding: 3,
     shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
   },
-  backInner: { flex: 1, borderWidth: 1, borderColor: 'rgba(196,163,90,0.55)', alignItems: 'center', justifyContent: 'center' },
-  medallion: { borderWidth: 1.5, borderColor: colors.gold, backgroundColor: 'rgba(196,163,90,0.18)' },
+  backInner: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,106,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#162036',
+  },
+  medallion: {
+    borderWidth: 1.5,
+    borderColor: colors.goldSoft,
+    backgroundColor: 'rgba(212,175,106,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backMark: { fontFamily: fonts.black, color: colors.goldSoft },
 });
