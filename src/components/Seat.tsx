@@ -46,7 +46,7 @@ export function Seat({ name, isBot, chips, badge, active, winner, dim, lastActio
 
   return (
     <View style={[styles.wrap, dim && { opacity: 0.45 }]} accessibilityLabel={`${name}${isBot ? ', computer player' : ''}, ${formatChips(chips)} chips${badge ? `, ${badge}` : ''}`}>
-      <Animated.Text style={[styles.crown, crownStyle]}>{\u{1F451}}</Animated.Text>
+      <Animated.Text style={[styles.crown, crownStyle]}>👑</Animated.Text>
       <View style={{ width: size + 10, height: size + 10, alignItems: 'center', justifyContent: 'center' }}>
         <Animated.View style={[styles.ring, { width: size + 10, height: size + 10, borderRadius: (size + 10) / 2 }, ringStyle]} />
         {winner && <View style={[styles.winRing, { width: size + 10, height: size + 10, borderRadius: (size + 10) / 2 }]} />}
