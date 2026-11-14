@@ -3,19 +3,37 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 import { STARTING_CHIPS } from './config';
 import { nextDaily } from './daily';
 import { setHapticsEnabled } from './feel';
+import { unlockedAchievements } from './achievements';
 
 const KEY = 'twopatti.wallet.v1';
 
-/** Local-only wallet. No server, no account, no purchases in this build. */
 interface Saved {
   balance: number;
   ageConfirmed: boolean;
   lastDaily: string | null;
   haptics: boolean;
   handsPlayed: number;
+  wins: number;
+  blindWins: number;
+  biggestPot: number;
+  currentStreak: number;
+  bestStreak: number;
+  achievements: string[];
 }
 
-const initial: Saved = { balance: STARTING_CHIPS, ageConfirmed: false, lastDaily: null, haptics: true, handsPlayed: 0 };
+const initial: Saved = {
+  balance: STARTING_CHIPS,
+  ageConfirmed: false,
+  lastDaily: null,
+  haptics: true,
+  handsPlayed: 0,
+  wins: 0,
+  blindWins: 0,
+  biggestPot: 0,
+  currentStreak: 0,
+  bestStreak: 0,
+  achievements: [],
+};
 
 interface Store extends Saved {
   ready: boolean;
@@ -24,6 +42,8 @@ interface Store extends Saved {
   claimDaily: () => number;
   setHaptics: (on: boolean) => void;
   countHand: () => void;
+  recordWin: (pot: number, blind: boolean) => void;
+  recordLoss: () => void;
 }
 
 const Ctx = createContext<Store | null>(null);
@@ -36,9 +56,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     AsyncStorage.getItem(KEY)
       .then(raw => {
         if (raw) {
-          const parsed = JSON.parse(raw) as Partial<Saved> & { streak?: number };
-          const { streak: _ignored, ...rest } = parsed;
-          const s = { ...initial, ...rest } as Saved;
+          const parsed = JSON.parse(raw) as Partial<Saved>;
+          const s = { ...initial, ...parsed } as Saved;
           setHapticsEnabled(s.haptics);
           setState(s);
         }
@@ -65,9 +84,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
   const countHand = useCallback(() => setState(s => ({ ...s, handsPlayed: s.handsPlayed + 1 })), []);
 
+  const recordWin = useCallback((pot: number, blind: boolean) => {
+    setState(s => {
+      const wins = s.wins + 1;
+      const blindWins = s.blindWins + (blind ? 1 : 0);
+      const biggestPot = Math.max(s.biggestPot, pot);
+      const currentStreak = s.currentStreak + 1;
+      const bestStreak = Math.max(s.bestStreak, currentStreak);
+      const stats = { handsPlayed: s.handsPlayed, wins, blindWins, biggestPot, streak: currentStreak };
+      const achievements = unlockedAchievements(stats);
+      return { ...s, wins, blindWins, biggestPot, currentStreak, bestStreak, achievements };
+    });
+  }, []);
+
+  const recordLoss = useCallback(() => {
+    setState(s => ({ ...s, currentStreak: 0 }));
+  }, []);
+
   const value = useMemo<Store>(
-    () => ({ ...state, ready, confirmAge, setBalance, claimDaily, setHaptics, countHand }),
-    [state, ready, confirmAge, setBalance, claimDaily, setHaptics, countHand],
+    () => ({ ...state, ready, confirmAge, setBalance, claimDaily, setHaptics, countHand, recordWin, recordLoss }),
+    [state, ready, confirmAge, setBalance, claimDaily, setHaptics, countHand, recordWin, recordLoss],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
