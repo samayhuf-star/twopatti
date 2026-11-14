@@ -2,7 +2,7 @@
 
 A two-card social card game for iPhone (Expo / React Native), inspired by Teen Patti.
 Everyone gets two cards; the third card comes from the table mode, and the best
-three-card hand wins the pot. Virtual chips only: no cash value, no cash-out. 18+.
+three-card hand wins the pot. Virtual chips only: no cash value, no cash-out, and no chip shop. 17+.
 
 © 2026 Samay Vashsht. All rights reserved.
 
@@ -22,11 +22,11 @@ three-card hand wins the pot. Virtual chips only: no cash value, no cash-out. 18
 - +10% Blind Win house bonus for a still-blind winner (never taken from the pot).
 - Local wallet only (AsyncStorage): 25,000 starting chips, daily bonus (2,000 up to 5,000 on a
   7-day streak).
-- 18+ age gate on first launch. Rules screen. Settings with a vibration toggle and legal links.
+- 17+ age gate on first launch. Rules screen. Settings with a vibration toggle and legal links.
 - Motion: deal animation, card flip on see, centre reveal, pot pulse, winner banner with crown
   and confetti, +10% Blind Win toast, haptics. System Reduce Motion skips movement and confetti.
 
-Not in this build: online play, login, server wallet, IAP or shop, side show, leaderboard,
+Not in this build: online play, login, server wallet, in-app purchase (deferred to 1.1), side show, leaderboard,
 table extras, camera angles, sound and music, turn timers, hand history.
 
 ## Project layout
@@ -62,4 +62,4 @@ npx expo start
 - `eas build --platform ios --profile production` (remote app version, auto-increment).
 - `submit.production` in `eas.json` needs the App Store Connect app id (`ascAppId`) once it exists.
 
-Legal pages: https://samayhuf-star.github.io/app-legal/2patti/
+Legal pages: https://samayhuf-star.github.io/app-legal/2patti/privacy.html , terms.html , and support.html. Version 1.0 is free.

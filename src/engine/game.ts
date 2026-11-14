@@ -14,7 +14,7 @@ export type Mode = 'centre' | 'imaginary';
 export interface TableConfig {
   mode: Mode;
   ante: number;
-  /** Max current blind while a player is still blind (placeholder 8x ante). */
+  /** Max current blind while a player is still blind (8x the ante). */
   blindCap: number;
   /** Pot cap and max single bet (128x ante). Reaching it forces a showdown. */
   potCap: number;

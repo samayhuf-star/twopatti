@@ -10,4 +10,4 @@ Dark green/casino theme. Stylized two playing cards with a subtle chip. Deep bac
 4. **Winner** – Winner banner + chips. Headline: "Best hand wins"
 5. **Lobby** – Table select / wallet. Headline: "Virtual chips only"
 
-Emphasize 18+ and no real money.
+Emphasize 17+ and no real money. Screenshots show the lobby and the table, not the age gate or Settings.

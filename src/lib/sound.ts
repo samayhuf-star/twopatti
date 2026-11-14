@@ -1,22 +1,29 @@
 /**
- * Lightweight sound system. Uses expo-av when available.
- * Drop short .mp3/.wav files into assets/sounds/ (deal.mp3, bet.mp3, win.mp3)
- * and they will play. Missing files or missing expo-av are silent (no crash).
+ * Optional table sounds. Stays silent unless expo-av and short clips are added later.
+ * Missing files or a missing expo-av module never throw.
  */
-let Audio: typeof import('expo-av').Audio | null = null;
+type Playback = { replayAsync: () => Promise<void> };
+type AudioModule = {
+  Sound: {
+    createAsync: (src: number, opts: { volume: number }) => Promise<{ sound: Playback }>;
+  };
+};
+
+let Audio: AudioModule | null = null;
 try {
+  // Optional dependency. Not imported statically so a missing module stays silent.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  Audio = require('expo-av').Audio;
+  Audio = require('expo-av').Audio as AudioModule;
 } catch {
-  // expo-av not installed — sounds stay silent
+  Audio = null;
 }
 
 type SoundName = 'deal' | 'bet' | 'win' | 'fold';
 
-const cache: Partial<Record<SoundName, import('expo-av').Audio.Sound>> = {};
+const cache: Partial<Record<SoundName, Playback>> = {};
 
 const SOURCES: Record<SoundName, number | null> = {
-  deal: null, // require('../../assets/sounds/deal.mp3') once assets exist
+  deal: null,
   bet: null,
   win: null,
   fold: null,
@@ -29,9 +36,9 @@ export async function playSound(name: SoundName) {
     if (!src) return;
     let sound = cache[name];
     if (!sound) {
-      const { sound: s } = await Audio.Sound.createAsync(src, { volume: 0.6 });
-      cache[name] = s;
-      sound = s;
+      const { sound: created } = await Audio.Sound.createAsync(src, { volume: 0.6 });
+      cache[name] = created;
+      sound = created;
     }
     await sound.replayAsync();
   } catch {
