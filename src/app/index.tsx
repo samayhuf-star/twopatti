@@ -6,12 +6,14 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../components/Button';
 import { PressableScale } from '../components/PressableScale';
-import { Mode, SILVER, TIERS } from '../engine';
+import { Mode, TIERS } from '../engine';
 import { AGE_NOTICE, CHIP_DISCLAIMER } from '../lib/config';
 import { nextDaily } from '../lib/daily';
 import { feel } from '../lib/feel';
 import { useStore } from '../lib/store';
 import { colors, fonts, formatChips } from '../theme';
+
+const OPEN_TIERS = new Set(['silver', 'gold', 'diamond']);
 
 function Segment<T extends string | number>({ options, value, onChange }: { options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
   return (
@@ -32,11 +34,11 @@ function Segment<T extends string | number>({ options, value, onChange }: { opti
 
 export default function Lobby() {
   const store = useStore();
-  const [mode, setMode] = useState<Mode>('imaginary');
+  const [mode, setMode] = useState<Mode>('centre');
   const [seats, setSeats] = useState<4 | 5>(5);
   const [toast, setToast] = useState<string | null>(null);
+  const [showTip, setShowTip] = useState(false);
   const daily = nextDaily(store.lastDaily);
-  const canSit = store.balance >= SILVER.minToSit;
 
   const flash = (t: string) => {
     setToast(t);
@@ -53,6 +55,11 @@ export default function Lobby() {
             <Text style={styles.balanceText}>{formatChips(store.balance)}</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
+            <PressableScale onPress={() => router.push('/tutorial')} accessibilityLabel="Tutorial">
+              <View style={styles.iconBtn}>
+                <Ionicons name="school-outline" size={20} color={colors.ink} />
+              </View>
+            </PressableScale>
             <PressableScale onPress={() => router.push('/rules')} accessibilityLabel="How to play">
               <View style={styles.iconBtn}>
                 <Ionicons name="book-outline" size={20} color={colors.ink} />
@@ -96,11 +103,27 @@ export default function Lobby() {
             value={mode}
             onChange={m => setMode(m)}
           />
-          <Text style={styles.modeHint}>
-            {mode === 'centre'
-              ? 'One shared centre card opens after the first betting round.'
-              : 'No centre card. Your best third card is picked for you.'}
-          </Text>
+          <View style={styles.hintRow}>
+            <Text style={styles.modeHint}>
+              {mode === 'centre'
+                ? 'One shared centre card opens after the first betting round.'
+                : 'No centre card. Your best third card is picked for you.'}
+            </Text>
+            {mode === 'imaginary' && (
+              <PressableScale onPress={() => setShowTip(!showTip)} accessibilityLabel="How Imaginary works">
+                <View style={styles.tipBtn}>
+                  <Ionicons name="information-circle-outline" size={18} color={colors.goldSoft} />
+                </View>
+              </PressableScale>
+            )}
+          </View>
+          {mode === 'imaginary' && showTip && (
+            <View style={styles.tooltip}>
+              <Text style={styles.tooltipText}>
+                Imaginary mode: the game looks at your two cards and auto-picks the single best third card that completes them (it never uses a card you already hold). Both of your real cards stay in your hand. This is more strategic than Centre.
+              </Text>
+            </View>
+          )}
 
           <View style={styles.row}>
             <View style={[styles.pill, styles.pillOn]}>
@@ -123,8 +146,9 @@ export default function Lobby() {
           />
 
           <View style={styles.grid}>
-            {TIERS.map(t => {
-              const open = t.id === SILVER.id;
+            {TIERS.filter(t => OPEN_TIERS.has(t.id) || t.ante <= 5000).map(t => {
+              const open = OPEN_TIERS.has(t.id);
+              const canSit = store.balance >= t.minToSit;
               return (
                 <View key={t.id} style={[styles.tier, !open && { opacity: 0.55 }]}>
                   <Text style={styles.tierName}>{t.name.toUpperCase()}</Text>
@@ -137,8 +161,7 @@ export default function Lobby() {
                       tone="green"
                       disabled={!canSit}
                       style={{ marginTop: 10, alignSelf: 'stretch' }}
-                      testID="sit-silver"
-                      onPress={() => router.push({ pathname: '/table', params: { mode, seats: String(seats) } })}
+                      onPress={() => router.push({ pathname: '/table', params: { mode, seats: String(seats), tier: t.id } })}
                     />
                   ) : (
                     <View style={styles.soon}>
@@ -150,12 +173,6 @@ export default function Lobby() {
               );
             })}
           </View>
-
-          {!canSit && (
-            <View style={styles.broke}>
-              <Text style={styles.brokeText}>Need {formatChips(SILVER.minToSit - store.balance)} more chips to sit at Silver. Claim your daily bonus or wait for tomorrow.</Text>
-            </View>
-          )}
 
           <Text style={styles.legal}>
             {AGE_NOTICE} {CHIP_DISCLAIMER}
@@ -187,7 +204,11 @@ const styles = StyleSheet.create({
   segItem: { paddingVertical: 11, borderRadius: 10, alignItems: 'center' },
   segOn: { backgroundColor: colors.feltHi, borderWidth: 1, borderColor: colors.goldSoft },
   segText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.muted },
-  modeHint: { fontFamily: fonts.regular, fontSize: 13, color: colors.warm, textAlign: 'center', marginTop: -4 },
+  hintRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  modeHint: { fontFamily: fonts.regular, fontSize: 13, color: colors.warm, textAlign: 'center', flex: 1 },
+  tipBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.goldDark },
+  tooltip: { backgroundColor: colors.panel, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: colors.goldDark },
+  tooltipText: { fontFamily: fonts.regular, fontSize: 13, color: colors.ink, lineHeight: 19 },
   row: { flexDirection: 'row', gap: 8 },
   pill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11, borderRadius: 12, backgroundColor: 'rgba(14,16,20,0.9)', borderWidth: 1, borderColor: colors.panelBorder },
   pillOn: { backgroundColor: colors.feltHi, borderColor: colors.goldSoft },
@@ -199,8 +220,6 @@ const styles = StyleSheet.create({
   tierMin: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted },
   soon: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 12, paddingVertical: 12 },
   soonText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted },
-  broke: { backgroundColor: 'rgba(122,36,48,0.4)', borderRadius: 14, padding: 14, gap: 8, borderWidth: 1, borderColor: colors.wine },
-  brokeText: { fontFamily: fonts.medium, fontSize: 14, color: colors.ink, textAlign: 'center' },
   legal: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted, textAlign: 'center', lineHeight: 17, marginTop: 8 },
   toast: { position: 'absolute', bottom: 40, alignSelf: 'center', backgroundColor: colors.feltHi, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10, borderWidth: 1, borderColor: colors.goldSoft },
   toastText: { fontFamily: fonts.bold, color: colors.ink, fontSize: 14 },
