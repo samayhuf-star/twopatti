@@ -47,11 +47,12 @@ export function Seat({ name, isBot, chips, badge, active, winner, dim, lastActio
   return (
     <View style={[styles.wrap, dim && { opacity: 0.45 }]} accessibilityLabel={`${name}${isBot ? ', computer player' : ''}, ${formatChips(chips)} chips${badge ? `, ${badge}` : ''}`}>
       <Animated.Text style={[styles.crown, crownStyle]}>👑</Animated.Text>
-      <View style={{ width: size + 10, height: size + 10, alignItems: 'center', justifyContent: 'center' }}>
-        <Animated.View style={[styles.ring, { width: size + 10, height: size + 10, borderRadius: (size + 10) / 2 }, ringStyle]} />
-        {winner && <View style={[styles.winRing, { width: size + 10, height: size + 10, borderRadius: (size + 10) / 2 }]} />}
+      <View style={{ width: size + 12, height: size + 12, alignItems: 'center', justifyContent: 'center' }}>
+        <Animated.View style={[styles.ring, { width: size + 12, height: size + 12, borderRadius: (size + 12) / 2 }, ringStyle]} />
+        {winner && <View style={[styles.winRing, { width: size + 12, height: size + 12, borderRadius: (size + 12) / 2 }]} />}
         <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }, !isBot && styles.you]}>
-          <Text style={[styles.initials, { fontSize: isBot ? size * 0.3 : size * 0.24 }]}>{initials}</Text>
+          <View style={styles.innerGlow} />
+          <Text style={[styles.initials, { fontSize: isBot ? size * 0.28 : size * 0.22 }]}>{initials}</Text>
         </View>
         {isBot && (
           <View style={styles.botTag}>
@@ -74,18 +75,19 @@ export function Seat({ name, isBot, chips, badge, active, winner, dim, lastActio
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', width: 96 },
+  wrap: { alignItems: 'center', width: 100 },
   crown: { fontSize: 22, height: 26, marginBottom: -2 },
   ring: { position: 'absolute', borderWidth: 2.5, borderColor: colors.goldSoft },
-  winRing: { position: 'absolute', borderWidth: 3, borderColor: colors.highlight, shadowColor: colors.goldSoft, shadowOpacity: 0.8, shadowRadius: 10 },
-  avatar: { backgroundColor: colors.panel, borderWidth: 2, borderColor: colors.panelBorder, alignItems: 'center', justifyContent: 'center' },
+  winRing: { position: 'absolute', borderWidth: 3, borderColor: colors.highlight, shadowColor: colors.goldSoft, shadowOpacity: 0.85, shadowRadius: 12 },
+  avatar: { backgroundColor: colors.panel, borderWidth: 2, borderColor: colors.goldDark, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   you: { backgroundColor: colors.feltEdge, borderColor: colors.gold },
-  initials: { fontFamily: fonts.bold, color: colors.ink, letterSpacing: 0.4 },
-  botTag: { position: 'absolute', bottom: -1, right: -1, backgroundColor: colors.black, borderRadius: 7, paddingHorizontal: 5, paddingVertical: 1, borderWidth: 1, borderColor: colors.goldDark },
+  innerGlow: { position: 'absolute', top: -8, width: '70%', height: '40%', borderRadius: 40, backgroundColor: 'rgba(240,212,138,0.12)' },
+  initials: { fontFamily: fonts.bold, color: colors.ink, letterSpacing: 0.5 },
+  botTag: { position: 'absolute', bottom: -1, right: -2, backgroundColor: colors.black, borderRadius: 7, paddingHorizontal: 5, paddingVertical: 1, borderWidth: 1, borderColor: colors.goldDark },
   botTagText: { fontFamily: fonts.bold, fontSize: 9, color: colors.goldSoft, letterSpacing: 0.7 },
-  name: { marginTop: 3, fontFamily: fonts.semibold, color: colors.ink, fontSize: 13 },
+  name: { marginTop: 4, fontFamily: fonts.semibold, color: colors.ink, fontSize: 13 },
   chips: { fontFamily: fonts.bold, color: colors.goldSoft, fontSize: 13, fontVariant: ['tabular-nums'] },
-  badge: { marginTop: 4, borderWidth: 1, borderColor: colors.gold, backgroundColor: 'rgba(14,16,20,0.9)', borderRadius: 9, paddingHorizontal: 8, paddingVertical: 2 },
+  badge: { marginTop: 4, borderWidth: 1, borderColor: colors.gold, backgroundColor: 'rgba(14,16,20,0.92)', borderRadius: 9, paddingHorizontal: 8, paddingVertical: 2 },
   badgeFold: { borderColor: colors.panelBorder },
   badgeText: { fontFamily: fonts.semibold, color: colors.goldSoft, fontSize: 11 },
   action: { marginTop: 2, fontFamily: fonts.medium, color: colors.warm, fontSize: 11 },
