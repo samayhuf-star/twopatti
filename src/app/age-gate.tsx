@@ -16,7 +16,7 @@ export default function AgeGate() {
     <View style={styles.root}>
       <Image source={ROOM_BG} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" blurRadius={14} />
       <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(14,16,20,0.55)' }]} />
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
         <Text style={styles.word}>2 PATTI</Text>
         <Text style={styles.tag}>Two cards. One table. Your best third card.</Text>
         <View style={styles.card}>
@@ -25,6 +25,9 @@ export default function AgeGate() {
               <Text style={styles.h}>Sorry, 2 Patti is for ages 17 and up</Text>
               <Text style={styles.p}>You must be 17 or older to play. Please close the app.</Text>
               {Platform.OS === 'android' && <Button label="CLOSE" tone="dark" onPress={() => BackHandler.exitApp()} />}
+              {Platform.OS === 'ios' && (
+                <Button label="BACK" tone="dark" onPress={() => setUnder(false)} testID="age-back" style={styles.back} />
+              )}
             </>
           ) : (
             <>
@@ -52,4 +55,5 @@ const styles = StyleSheet.create({
   h: { fontFamily: fonts.bold, fontSize: 22, color: colors.ink },
   p: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink, lineHeight: 21 },
   small: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted, lineHeight: 18 },
+  back: { minHeight: 44, alignSelf: 'stretch' },
 });

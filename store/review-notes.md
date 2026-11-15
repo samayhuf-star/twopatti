@@ -7,8 +7,8 @@ Paste this into App Review Information. Bundle ID com.samayvashsht.twopatti. ASC
 ## How to play a hand
 
 1. Install this build and open it. Nothing needs a password, a code, or a network connection.
-2. On first launch the app asks if you are 17 or older. Tap “I AM 17 OR OLDER”. The table does not open until you do. “I AM UNDER 17” stops play and asks you to close the app.
-3. The lobby starts you with 25,000 virtual chips. Pick Centre or Imaginary, then 4 or 5 seats. Tap SIT on Silver (ante 100). Gold is also available. Diamond stays disabled until the balance covers its minimum.
+2. On first launch the app asks if you are 17 or older. Tap “I AM 17 OR OLDER”. The table does not open until you do. “I AM UNDER 17” stops play and asks you to close the app. On iPhone, BACK returns to that question.
+3. The lobby starts you with 25,000 virtual chips. Pick Centre or Imaginary, then 4 or 5 seats. Tap SIT on Silver (ante 100), Gold (ante 500), or Diamond (ante 5,000, minimum 25,000). All three can be sat with the starting balance.
 4. Centre: one shared card is dealt face down and opens after the first betting round. It becomes every remaining player’s third card, then a second betting round starts.
 5. Imaginary: there is no shared card. The game picks one third card for your two cards. Both of your real cards stay in your hand. The info button next to the Imaginary description explains this.
 6. On your turn you can stay blind and bet the cheaper stake, or tap SEE (free) to look at your cards. After you see, bets cost more and you stay seen. FOLD drops you out of the hand. When two players are left, SHOW pays to compare the hands.
