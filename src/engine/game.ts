@@ -41,7 +41,14 @@ export const TIERS: Tier[] = [
   { id: 'plat2', name: 'Platinum', ante: 2000 },
   { id: 'diamond', name: 'Diamond', ante: 5000 },
   { id: 'royal', name: 'Royal', ante: 10000 },
-].map(t => ({ ...t, blindCap: t.ante * 8, minToSit: t.ante * 10, potCap: t.ante * 128 }));
+].map(t => ({
+  ...t,
+  blindCap: t.ante * 8,
+  // A fresh wallet is 25,000. Diamond's buy-in matches that stack so it can be sat.
+  // Ante, blind cap (8× ante) and pot cap (128× ante) stay on the same multiples.
+  minToSit: t.id === 'diamond' ? 25_000 : t.ante * 10,
+  potCap: t.ante * 128,
+}));
 
 export const SILVER = TIERS[0];
 

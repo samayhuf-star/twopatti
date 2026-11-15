@@ -32,6 +32,17 @@ describe('table setup', () => {
     expect(SILVER).toMatchObject({ name: 'Silver', ante: 100, blindCap: 800, minToSit: 1000, potCap: 12800 });
     expect(TIERS.map(t => t.ante)).toEqual([100, 500, 1000, 2000, 5000, 10000]);
   });
+  test('Diamond buy-in is 25,000 and a hand can be dealt at the existing stakes', () => {
+    const diamond = TIERS.find(t => t.id === 'diamond');
+    if (!diamond) throw new Error('Diamond tier missing');
+    expect(diamond).toMatchObject({ name: 'Diamond', ante: 5000, blindCap: 40_000, minToSit: 25_000, potCap: 640_000 });
+    const s = startHand(tableConfig('centre', diamond), seats(4, 25_000), 0, seededRng(1));
+    expect(s.phase).toBe('betting');
+    expect(s.pot).toBe(20_000);
+    expect(s.currentBlind).toBe(5000);
+    expect(s.players.every(p => p.chips === 20_000 && p.hole.length === 2)).toBe(true);
+    expect(legalActions(s).bets.map(b => b.amount)).toEqual([5000, 10_000]);
+  });
   test('only 4 or 5 seats', () => {
     expect(() => start('imaginary', 3)).toThrow();
     expect(() => start('imaginary', 6)).toThrow();
